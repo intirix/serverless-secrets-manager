@@ -9,4 +9,4 @@ class System:
 		self.db = db
 
 	def addUser(self,username,displayName):
-		return
+		self.db.addUser(username,displayName)
