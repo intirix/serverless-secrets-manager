@@ -24,6 +24,11 @@ class MemoryDB(DBInterface):
 		self.counter = self.counter+1
 		self.db[username]={"id":self.counter,"displayName":displayName}
 
+	def getUser(self,username):
+		return self.listUsers()[username]
+
+	def updateUserField(self,username,fieldName,value):
+		self.db[username][fieldName]=value
 
 
 

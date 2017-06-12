@@ -10,3 +10,6 @@ class System:
 
 	def addUser(self,username,displayName):
 		self.db.addUser(username,displayName)
+
+	def setUserPublicKey(self,username,pem):
+		self.db.updateUserField(username,"publicKey",pem)
