@@ -1,2 +1,4 @@
 .contents
 *.zip
+*.swp
+*.pyc
