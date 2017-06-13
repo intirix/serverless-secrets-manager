@@ -21,10 +21,18 @@ class Crypto:
 		privatePem = RSAkey.exportKey()
 		return (privatePem,publicPem)
 
+	def pad(self,s):
+		# https://stackoverflow.com/questions/12524994/encrypt-decrypt-using-pycrypto-aes-256
+		return s + (AES.block_size - len(s) % AES.block_size) * chr(AES.block_size - len(s) % AES.block_size)
+
+	def unpad(self,s):
+		# https://stackoverflow.com/questions/12524994/encrypt-decrypt-using-pycrypto-aes-256
+		return s[:-ord(s[len(s)-1:])]
+
 	def encrypt(self,key,message):
 		iv = Random.new().read(AES.block_size)
-		cipher = AES.new(key, AES.MODE_CFB, iv)
-		encrypted = iv + cipher.encrypt(message)
+		cipher = AES.new(key, AES.MODE_CBC, iv)
+		encrypted = iv + cipher.encrypt(self.pad(message))
 		encoded = base64.b64encode(encrypted)
 		return encoded
 
@@ -32,8 +40,8 @@ class Crypto:
 		decoded = base64.b64decode(encrypted)
 		iv = decoded[0:AES.block_size]
 		emsg = decoded[AES.block_size:]
-		cipher = AES.new(key, AES.MODE_CFB, iv)
-		decrypted = cipher.decrypt(emsg)
+		cipher = AES.new(key, AES.MODE_CBC, iv)
+		decrypted = self.unpad(cipher.decrypt(emsg))
 		return decrypted
 
 	def sign(self,priv,message):
