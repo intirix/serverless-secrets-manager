@@ -6,6 +6,7 @@ from Crypto.PublicKey import RSA
 from Crypto import Random
 import time
 import json
+import scrypt
 
 def lambda_handler(event, context):
 
@@ -33,6 +34,8 @@ def lambda_handler(event, context):
 	publicPem = pubkey.exportKey()
 
 	rsapub = RSA.importKey(publicPem)
+
+	scrypt.encrypt('a secret message', 'password', maxtime=0.1)
 
 	t4 = time.time()
 	dt4 = t4 - t3
