@@ -30,6 +30,9 @@ class MemoryDB(DBInterface):
 	def updateUserField(self,username,fieldName,value):
 		self.db[username][fieldName]=value
 
+	def removeUserField(self,username,fieldName):
+		del self.db[username][fieldName]
+
 
 
 

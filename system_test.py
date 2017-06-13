@@ -38,6 +38,9 @@ class TestSystem(unittest.TestCase):
 		sig = obj.crypto.sign(privPem,message)
 		self.assertEqual(True,obj.crypto.verify(pubPem,message,sig))
 
+		obj.clearUserPrivateKey("user1")
+		self.assertEqual(True, not "privateKey" in obj.db.getUser("user1") or obj.db.getUser("user1")["privateKey"] == None)
+
 if __name__ == '__main__':
 	unittest.main()
 

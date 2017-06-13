@@ -34,5 +34,8 @@ class System:
 		priv = self.crypto.decrypt(key,encryptedPriv)
 		return priv
 
+	def clearUserPrivateKey(self,username):
+		self.db.removeUserField(username,"privateKey")
+
 
 
