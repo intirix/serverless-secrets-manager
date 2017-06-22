@@ -10,7 +10,12 @@ workspace="$( dirname $0 )"
 	zip lambda.zip *.py
 
 	(
-		cd .contents/lib/python2.7/site-packages
+		cd .contents2/lib/python2.7/site-packages
+		echo zip -u -r "$workspace/lambda.zip" *
+		zip -u -r "$workspace/lambda.zip" *
+	)
+	(
+		cd .contents2/lib64/python2.7/site-packages
 		echo zip -u -r "$workspace/lambda.zip" *
 		zip -u -r "$workspace/lambda.zip" *
 	)

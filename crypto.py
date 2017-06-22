@@ -2,10 +2,14 @@
 
 import scrypt
 from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
 from Crypto import Random
 import base64
+
+from datetime import datetime, timedelta
+import time
 
 class Crypto:
 
@@ -55,4 +59,75 @@ class Crypto:
 		rsapub = RSA.importKey(pub)
 		h = SHA256.new(message).digest()
 		return rsapub.verify(h, signature)
+
+	def encryptRSA(self,key,message):
+		rsapub = RSA.importKey(key)
+		cipher = PKCS1_OAEP.new(rsapub)
+		ciphertext = cipher.encrypt(message)
+		return ciphertext
+
+	def decryptRSA(self,key,ciphertext):
+		rsapriv = RSA.importKey(key)
+		cipher = PKCS1_OAEP.new(rsapriv)
+		message = cipher.decrypt(ciphertext)
+		return message
+
+def lambda_selftest(event,context):
+	obj=Crypto()
+
+
+	start = datetime.utcnow()
+	t1 = time.time()
+	(privatePem,publicPem)=obj.generatePublicPrivateKeys()
+	t2 = time.time()
+	dt2 = t2 - t1
+	print(str(dt2)+"s to generate RSA key")
+
+	key = obj.keyStretchPassword("salt1234","mypassword")
+	t3 = time.time()
+	dt3 = t3 - t2
+	print(str(dt3)+"s to stretch password")
+
+	message = "the quick fox jumped over the lazy dog"
+
+	cipher = obj.encrypt(key,message)
+	t4 = time.time()
+	dt4 = t4 - t3
+	print(str(dt4)+"s to AES encrypt message")
+
+	orig = obj.decrypt(key,cipher)
+	t5 = time.time()
+	dt5 = t5 - t4
+	print(str(dt5)+"s to AES decrypt message")
+
+	sig = obj.sign(privatePem,message)
+	t6 = time.time()
+	dt6 = t6 - t5
+	print(str(dt6)+"s to RSA sign message")
+
+	obj.verify(publicPem,message,sig)
+	t7 = time.time()
+	dt7 = t7 - t6
+	print(str(dt7)+"s to RSA verify message")
+
+	keyCipher = obj.encryptRSA(publicPem,key)
+	t8 = time.time()
+	dt8 = t8 - t7
+	print(str(dt8)+"s to RSA encrypt AES key")
+
+	origKey = obj.decryptRSA(privatePem,keyCipher)
+	t9 = time.time()
+	dt9 = t9 - t8
+	print(str(dt9)+"s to RSA decrypt AES key")
+
+
+	decryptionsPerSecond=1 / ( dt9 + dt5 )
+	print(str(decryptionsPerSecond)+" decryptions/second")
+
+
+
+if __name__ == '__main__':
+	lambda_selftest(None,None)
+
+
 
