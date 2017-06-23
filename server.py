@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import json
 
 class Context:
 
@@ -47,9 +48,22 @@ class Server:
 		self.system.addUser(user,displayName)
 
 		if "publicKey" in data:
-			self.syste.setUserPublicKey(user,data["publicKey"])
+			self.system.setUserPublicKey(user,data["publicKey"])
 		if "encryptedPrivateKey" in data:
-			self.syste.setUserPrivateKey(user,data["encryptedPrivateKey"])
+			self.system.setUserPrivateKey(user,data["encryptedPrivateKey"])
+
+	def updateUser(self,ctx,user,post_body):
+		data = {}
+		if len(post_body)>0:
+			data = json.loads(post_body)
+
+		if "displayName" in data:
+			self.system.setUserDisplayName(user,data["displayName"])
+		if "publicKey" in data:
+			self.system.setUserPublicKey(user,data["publicKey"])
+		if "encryptedPrivateKey" in data:
+			self.system.setUserPrivateKey(user,data["encryptedPrivateKey"])
+		return True
 
 
 

@@ -31,6 +31,11 @@ class System:
 	def getUser(self,user):
 		return self.db.getUser(user)
 
+	def setUserDisplayName(self,username,displayName):
+		self.log.info("Changing display name for "+username)
+		self.db.updateUserField(username,"displayName",displayName)
+		self.db.sync()
+
 	def setUserPublicKey(self,username,pem):
 		self.log.info("Changing the public key for "+username)
 		self.db.updateUserField(username,"publicKey",pem)

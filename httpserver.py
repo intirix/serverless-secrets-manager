@@ -55,6 +55,23 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 			self.end_headers()
 			self.wfile.write(json.dumps(resp,indent=2))
 
+	def do_PUT(self):
+		log = logging.getLogger("httpHandler")
+		ctx = server.Context("admin")
+
+		content_len = int(self.headers.getheader('content-length', 0))
+		post_body = self.rfile.read(content_len)
+		parts = self.path.split('?')[0].split('/')
+		iface = self.server.serverIface
+
+		if matches(self.path,["v1","users",None]):
+			user = parts[4]
+
+			if iface.updateUser(ctx,user,post_body):
+				self._send_response(200)
+			else:
+				self._send_response(404)
+
 	def do_POST(self):
 		log = logging.getLogger("httpHandler")
 		ctx = server.Context("admin")
@@ -68,8 +85,6 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 			user = parts[4]
 			iface.addUser(ctx,user,post_body)
 			self._send_response(201)
-		else:
-			log.warn("Unknown path: "+self.path, "parts="+str(parts))
 
 
 if __name__ == '__main__':
