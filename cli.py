@@ -32,6 +32,10 @@ class CLI:
 		print("      displayName - what get's displayed to users")
 		print("        optional - defaults to username")
 		print("")
+		print("  generate-key-for-user <user>")
+		print("    Generate a key for a user.  Will prompt for new password")
+		print("      user - username")
+		print("")
 		print("  create-secret")
 		print("    Create a new (empty) secret.  You can add extra fields later")
 		print("")
@@ -125,6 +129,15 @@ class CLI:
 				display = self.args[1]
 
 			self.client.addUser(user,display)
+		elif command == "generate-key-for-user":
+			if len(self.args)==0:
+				self.help()
+				raise Exception("Expected argument <user>")
+			user = self.args[0]
+
+			newPass = getpass.getpass("User's New Password:")
+			self.client.generateKeysForUser(user,newPass)
+
 		elif command == "create-secret":
 
 			pubKey = self.client.getUserPublicKey(self.user)

@@ -34,6 +34,7 @@ class System:
 		self.db.sync()
 
 	def setUserPrivateKey(self,username,key):
+		self.log.info("Changing the private key for "+username)
 		self.db.updateUserField(username,"encryptedPrivateKey",key)
 		self.db.sync()
 

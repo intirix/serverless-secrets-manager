@@ -16,6 +16,9 @@ class ClientSystemInterface:
 	def addUser(self,user,display):
 		return self.system.addUser(user,display)
 
+	def generateKeysForUser(self,user,password):
+		self.system.generateKeysForUser(user,password)
+
 	def getUserPrivateKey(self,user,password):
 		return self.system.getUserPrivateKey(user,password)
 
@@ -60,6 +63,9 @@ class Client:
 	def addUser(self,user,display):
 		if self.iface.canCreateUser(self.username):
 			return self.iface.addUser(user,display)
+
+	def generateKeysForUser(self,user,password):
+		self.iface.generateKeysForUser(user,password)
 
 	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,hmacKey,encryptedSecret,hmac):
 		return self.iface.addSecret(owner,secretEncryptionProfile,encryptedKey,hmacKey,encryptedSecret,hmac)
