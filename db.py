@@ -23,7 +23,7 @@ class MemoryDB(DBInterface):
 		return
 
 	def listUsers(self):
-		return self.udb
+		return json.loads(json.dumps(self.udb))
 
 
 	def addUser(self,username,displayName):
@@ -33,7 +33,7 @@ class MemoryDB(DBInterface):
 
 	def getUser(self,username):
 		if username in self.udb:
-			return self.listUsers()[username]
+			return json.loads(json.dumps(self.listUsers()[username]))
 		return None
 
 	def updateUserField(self,username,fieldName,value):
@@ -58,7 +58,7 @@ class MemoryDB(DBInterface):
 		self.sdb[sid]["hmac"]=hmac
 
 	def getSecret(self,sid):
-		return self.sdb[sid]
+		return json.loads(json.dumps(self.sdb[sid]))
 
 	def getSecretsForUser(self,user):
 		ret = {}
@@ -67,7 +67,7 @@ class MemoryDB(DBInterface):
 			if user in self.sdb[sid]["users"]:
 				ret[sid]=self.sdb[sid]
 
-		return ret
+		return json.loads(json.dumps(ret))
 
 class JsonDB(MemoryDB):
 	def __init__(self,path):
