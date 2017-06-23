@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
 import json
+import crypto
+import logging
 
 class Context:
 
@@ -13,6 +15,29 @@ class Server:
 
 	def __init__(self,system):
 		self.system = system
+		self.crypto = crypto.Crypto()
+		self.log = logging.getLogger("server")
+
+	def validateAuthentication(self,username,password):
+		try:
+			data = json.loads(password)
+			token = data["token"]
+			signedToken = data["signed"]
+			pub = self.system.getUserPublicKey(username)
+			if self.crypto.verify(pub,token,signedToken):
+				return Context(username)
+		except:
+			self.log.exception("Failed login for user: "+username)
+		return None
+
+	def validateAuthenticationHeader(self,header):
+		if header != None and header.find("Basic ")==0:
+			try:
+				(user,password) = self.crypto.decode(header.split(' ')[1]).split(':',1)
+				return self.validateAuthentication(user,password)
+			except:
+				self.log.exception("Failed login for user: "+username)
+		return None
 
 	def _getUserData(self,obj):
 		ret = {}

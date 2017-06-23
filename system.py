@@ -39,6 +39,12 @@ class System:
 		self.db.sync()
 		return True
 
+	def getUserPublicKey(self,username):
+		data = self.getUser(username)
+		if data != None and "publicKey" in data:
+			return data["publicKey"]
+		return None
+
 	def setUserPublicKey(self,username,pem):
 		self.log.info("Changing the public key for "+username)
 		self.db.updateUserField(username,"publicKey",pem)

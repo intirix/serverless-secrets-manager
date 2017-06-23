@@ -48,8 +48,12 @@ class ClientRestInterface:
 	def __init__(self,baseurl):
 		self.baseurl = baseurl
 
+	def login(self,username,password):
+		self.username = username
+		self.password = password
+
 	def listUsers(self):
-		r = requests.get(self.baseurl+"/v1/users")
+		r = requests.get(self.baseurl+"/v1/users",auth=(self.username,self.password))
 		r.raise_for_status()
 		return r.json()
 			

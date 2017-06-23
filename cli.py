@@ -9,6 +9,7 @@ import logging
 import getpass
 import crypto
 import json
+from datetime import datetime
 
 class CLI:
 
@@ -117,7 +118,10 @@ class CLI:
 			# direct access doesn't require a password
 			self.client.login(self.user,"")
 		else:
-			self.getPrivateKey()
+			token = datetime.utcnow().isoformat()
+			signedToken = self.crypto.sign(self.getPrivateKey(),token)
+			authToken = json.dumps({"token":token,"signed":signedToken})
+			self.client.login(self.user,authToken)
 
 	def getPassword(self):
 		if self.password == None:

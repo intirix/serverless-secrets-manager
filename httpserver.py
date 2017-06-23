@@ -34,9 +34,16 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 		self.send_header("Connection", "close")
 		self.end_headers()
 
+	def _authenticate(self):
+
+		return self.server.serverIface.validateAuthenticationHeader(self.headers.get("Authorization"))
+
 	def do_GET(self):
 		log = logging.getLogger("httpHandler")
-		ctx = server.Context("admin")
+		ctx = self._authenticate()
+		if ctx == None:
+			self._send_response(401)
+			return
 
 		resp = None
 		parts = self.path.split('?')[0].split('/')
@@ -81,7 +88,10 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 	def do_PUT(self):
 		log = logging.getLogger("httpHandler")
-		ctx = server.Context("admin")
+		ctx = self._authenticate()
+		if ctx == None:
+			self._send_response(401)
+			return
 
 		content_len = int(self.headers.getheader('content-length', 0))
 		post_body = self.rfile.read(content_len)
@@ -117,7 +127,10 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 	def do_POST(self):
 		log = logging.getLogger("httpHandler")
-		ctx = server.Context("admin")
+		ctx = self._authenticate()
+		if ctx == None:
+			self._send_response(401)
+			return
 
 		content_len = int(self.headers.getheader('content-length', 0))
 		post_body = self.rfile.read(content_len)
