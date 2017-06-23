@@ -124,6 +124,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 				self._sendSecret(200,ctx,sid)
 			else:
 				self._send_response(404)
+		else:
+			self._send_response(404)
 
 	def do_POST(self):
 		log = logging.getLogger("httpHandler")
@@ -149,13 +151,15 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 			self._sendSecret(201,ctx,sid)
 		elif matches(self.path,["v1","users",None,"keys"]):
 			user = parts[4]
-			if qs.get("generate","false")=="true":
-				pem = iface.generateKeysForUser(ctx,user)
+			if "true" in qs.get("generate","false"):
+				pem = iface.generateKeysForUser(ctx,user,post_body)
 				self.send_response(200)
 				self.send_header("Connection", "close")
 				self.send_header("Content-Type","application/x-pem-file")
 				self.end_headers()
 				self.wfile.write(pem)
+			else:
+				self._send_response(405)
 		elif matches(self.path,["v1","users",None,"keys","public"]):
 			user = parts[4]
 			if iface.setUserPublicKey(ctx,user,post_body):
@@ -168,6 +172,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 				self._send_response(201)
 			else:
 				self._send_response(404)
+		else:
+			self._send_response(404)
 
 	def _sendSecret(self,code,ctx,sid):
 		iface = self.server.serverIface

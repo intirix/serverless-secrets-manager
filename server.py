@@ -60,8 +60,8 @@ class Server:
 			return None
 		return self._getUserData(data)
 
-	def generateKeysForUser(self,ctx,user):
-		self.system.generateKeysForUser(user)
+	def generateKeysForUser(self,ctx,user,password):
+		self.system.generateKeysForUser(user,password)
 		return self.system.getUser(user)["publicKey"]
 
 	def getUserEncryptedPrivateKey(self,ctx,user):

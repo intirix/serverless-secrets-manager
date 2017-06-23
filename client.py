@@ -57,6 +57,10 @@ class ClientRestInterface:
 		r.raise_for_status()
 		return r.json()
 
+	def generateKeysForUser(self,user,password):
+		r = requests.post(self.baseurl+"/v1/users/"+user+"/keys?generate=true",auth=(self.username,self.password),data=password)
+		r.raise_for_status()
+
 	def getSecret(self,sid):
 		r = requests.get(self.baseurl+"/v1/secrets/"+sid,auth=(self.username,self.password))
 		r.raise_for_status()
