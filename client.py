@@ -56,7 +56,20 @@ class ClientRestInterface:
 		r = requests.get(self.baseurl+"/v1/users",auth=(self.username,self.password))
 		r.raise_for_status()
 		return r.json()
-			
+
+	def getSecret(self,sid):
+		r = requests.get(self.baseurl+"/v1/secrets/"+sid,auth=(self.username,self.password))
+		r.raise_for_status()
+		return r.json()
+
+	def getSecretsForUser(self,user):
+		r = requests.get(self.baseurl+"/v1/users/"+user+"/secrets",auth=(self.username,self.password))
+		r.raise_for_status()
+		return r.json()
+
+	def canUserReadSecret(self,user,sid):
+		# Delegate to the server
+		return True
 
 class Client:
 

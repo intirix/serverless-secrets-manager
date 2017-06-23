@@ -130,12 +130,15 @@ class CLI:
 
 	def getPrivateKey(self):
 		if self.privateKey == None:
-			f = open(self.privateKeyFile,"r")
-			encryptedPrivateKey = f.read()
-			f.close()
+			if self.privateKeyFile != None:
+				f = open(self.privateKeyFile,"r")
+				encryptedPrivateKey = f.read()
+				f.close()
 
-			aesKey = self.crypto.keyStretchPassword(self.user,self.getPassword())
-			self.privateKey = self.crypto.decrypt(aesKey,encryptedPrivateKey)
+				aesKey = self.crypto.keyStretchPassword(self.user,self.getPassword())
+				self.privateKey = self.crypto.decrypt(aesKey,encryptedPrivateKey)
+			else:
+				self.privateKey = self.client.getUserPrivateKey(self.user,self.getPassword())
 		return self.privateKey
 
 	def run(self):
@@ -196,7 +199,7 @@ class CLI:
 
 			sid = self.args[0]
 
-			privKey = self.client.getUserPrivateKey(self.user,self.getPassword())
+			privKey = self.getPrivateKey()
 
 			secretEntry = self.client.getSecret(sid)
 
@@ -217,7 +220,7 @@ class CLI:
 			print(json.dumps(origSecret,indent=2))
 
 		elif command == "get-my-secrets":
-			privKey = self.client.getUserPrivateKey(self.user,self.getPassword())
+			privKey = self.getPrivateKey()
 
 			secretEntries = self.client.getSecretsForUser(self.user)
 			print(secretEntries)
@@ -232,14 +235,15 @@ class CLI:
 				storedHmac = secretEntry["hmac"]
 				storedEncryptedSecret = secretEntry["encryptedSecret"]
 
-				if not self.crypto.verifyHmac(hmacKey,storedEncryptedSecret,storedHmac):
-					raise(Exception("Secret verification failed!"))
+				if self.crypto.verifyHmac(hmacKey,storedEncryptedSecret,storedHmac):
 
-				origKey = self.crypto.decryptRSA(privKey,encryptedKey)
-				origSecretText = self.crypto.decrypt(origKey,storedEncryptedSecret)
-				origSecret = json.loads(origSecretText)
-				del origSecret["random"]
-				secrets[sid]=origSecret
+					origKey = self.crypto.decryptRSA(privKey,encryptedKey)
+					origSecretText = self.crypto.decrypt(origKey,storedEncryptedSecret)
+					origSecret = json.loads(origSecretText)
+					del origSecret["random"]
+					secrets[sid]=origSecret
+				else:
+					print("Secret verification failed for "+sid)
 
 
 			print(json.dumps(secrets,indent=2))
