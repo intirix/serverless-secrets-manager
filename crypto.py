@@ -5,6 +5,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
+from Crypto.Hash import HMAC
 from Crypto import Random
 import base64
 import os
@@ -36,6 +37,12 @@ class Crypto:
 	def unpad(self,s):
 		# https://stackoverflow.com/questions/12524994/encrypt-decrypt-using-pycrypto-aes-256
 		return s[:-ord(s[len(s)-1:])]
+
+	def encode(self,data):
+		return base64.b64encode(data)
+
+	def decode(self,data):
+		return base64.b64decode(data)
 
 	def encrypt(self,key,message):
 		iv = Random.new().read(AES.block_size)
@@ -75,6 +82,19 @@ class Crypto:
 		cipher = PKCS1_OAEP.new(rsapriv)
 		message = cipher.decrypt(ciphertext)
 		return message
+
+	def createHmac(self,key,message):
+		h = HMAC.new(key,message,SHA256)
+		return h.hexdigest()
+
+	def verifyHmac(self,key,message,mac):
+		mac2 = self.createHmac(key,message)
+
+		compareKey = self.generateRandomKey()
+		
+		mac1b = self.createHmac(compareKey,mac)
+		mac2b = self.createHmac(compareKey,mac2)
+		return mac1b == mac2b
 
 def lambda_selftest(event,context):
 	obj=Crypto()

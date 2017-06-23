@@ -36,10 +36,15 @@ class MemoryDB(DBInterface):
 	def removeUserField(self,username,fieldName):
 		del self.udb[username][fieldName]
 
-	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,encryptedSecret):
+	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,hmacKey,encryptedSecret,hmac):
 		self.scounter = self.scounter+1
-		self.sdb[self.scounter]={"secretEncryptionProfile":secretEncryptionProfile,"encryptedSecret":encryptedSecret,"users":{}}
-		self.sdb[self.scounter]["users"][owner]={"encryptedKey":encryptedKey}
+		self.sdb[self.scounter]={}
+		self.sdb[self.scounter]["secretEncryptionProfile"]=secretEncryptionProfile
+		self.sdb[self.scounter]["encryptedSecret"]=encryptedSecret
+		self.sdb[self.scounter]["hmacKey"]=hmacKey
+		self.sdb[self.scounter]["hmac"]=hmac
+		self.sdb[self.scounter]["users"]={}
+		self.sdb[self.scounter]["users"][owner]={"encryptedKey":encryptedKey,"canWrite":"Y"}
 		return self.scounter
 
 	def getSecret(self,sid):

@@ -51,15 +51,24 @@ class TestSystem(unittest.TestCase):
 
 		secret = {"type":"password","url":"www.gmail.com","user":"myuser","password":"mypassword"}
 		aesKey = obj.crypto.generateRandomKey()
+		hmacKey = obj.crypto.generateRandomKey()
 		encryptedSecret = obj.crypto.encrypt(aesKey,json.dumps(secret))
+		hmac = obj.crypto.createHmac(hmacKey,encryptedSecret)
 		encryptedKey = obj.crypto.encryptRSA(pubKey,aesKey)
 		
-		sid = obj.addSecret("user1","1",encryptedKey,encryptedSecret)
+		sid = obj.addSecret("user1","1",obj.crypto.encode(encryptedKey),obj.crypto.encode(hmacKey),encryptedSecret,hmac)
 
 		secretEntry = obj.getSecret(sid)
 
-		origKey = obj.crypto.decryptRSA(privKey,secretEntry["users"]["user1"]["encryptedKey"])
-		origSecretText = obj.crypto.decrypt(origKey,secretEntry["encryptedSecret"])
+		#print(json.dumps(secretEntry,indent=2))
+
+		storedEncryptedKey = obj.crypto.decode(secretEntry["users"]["user1"]["encryptedKey"])
+		origKey = obj.crypto.decryptRSA(privKey,storedEncryptedKey)
+		storedHmacKey = obj.crypto.decode(secretEntry["hmacKey"])
+		storedHmac = secretEntry["hmac"]
+		storedEncryptedSecret = secretEntry["encryptedSecret"]
+		self.assertEqual(True,obj.crypto.verifyHmac(storedHmacKey,storedEncryptedSecret,storedHmac))
+		origSecretText = obj.crypto.decrypt(origKey,storedEncryptedSecret)
 		origSecret = json.loads(origSecretText)
 		self.assertEqual(secret["password"],origSecret["password"])
 
