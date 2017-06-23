@@ -74,6 +74,9 @@ class System:
 	def getSecret(self,sid):
 		return self.db.getSecret(sid)
 
+	def getSecretsForUser(self,user):
+		return self.db.getSecretsForUser(user)
+
 	def doesUserHaveWriteAccess(self,username,sid):
 		entry = self.getSecret(sid)
 		if username in entry["users"]:

@@ -2,6 +2,7 @@
 
 import json
 import os
+import uuid
 
 class DBInterface:
 
@@ -17,7 +18,6 @@ class MemoryDB(DBInterface):
 		self.udb = {}
 		self.sdb = {}
 		self.ucounter = 0
-		self.scounter = 0;
 
 	def sync(self):
 		return
@@ -43,15 +43,15 @@ class MemoryDB(DBInterface):
 		del self.udb[username][fieldName]
 
 	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,hmacKey,encryptedSecret,hmac):
-		self.scounter = self.scounter+1
-		self.sdb[self.scounter]={}
-		self.sdb[self.scounter]["secretEncryptionProfile"]=secretEncryptionProfile
-		self.sdb[self.scounter]["encryptedSecret"]=encryptedSecret
-		self.sdb[self.scounter]["hmacKey"]=hmacKey
-		self.sdb[self.scounter]["hmac"]=hmac
-		self.sdb[self.scounter]["users"]={}
-		self.sdb[self.scounter]["users"][owner]={"encryptedKey":encryptedKey,"canWrite":"Y"}
-		return self.scounter
+		sid = str(uuid.uuid4())
+		self.sdb[sid]={}
+		self.sdb[sid]["secretEncryptionProfile"]=secretEncryptionProfile
+		self.sdb[sid]["encryptedSecret"]=encryptedSecret
+		self.sdb[sid]["hmacKey"]=hmacKey
+		self.sdb[sid]["hmac"]=hmac
+		self.sdb[sid]["users"]={}
+		self.sdb[sid]["users"][owner]={"encryptedKey":encryptedKey,"canWrite":"Y"}
+		return sid
 
 	def updateSecret(self,sid,encryptedSecret,hmac):
 		self.sdb[sid]["encryptedSecret"]=encryptedSecret
@@ -59,6 +59,15 @@ class MemoryDB(DBInterface):
 
 	def getSecret(self,sid):
 		return self.sdb[sid]
+
+	def getSecretsForUser(self,user):
+		ret = {}
+
+		for sid in self.sdb.keys():
+			if user in self.sdb[sid]["users"]:
+				ret[sid]=self.sdb[sid]
+
+		return ret
 
 class JsonDB(MemoryDB):
 	def __init__(self,path):

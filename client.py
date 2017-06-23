@@ -36,6 +36,9 @@ class ClientSystemInterface:
 	def getSecret(self,sid):
 		return self.system.getSecret(sid)
 
+	def getSecretsForUser(self,user):
+		return self.system.getSecretsForUser(user)
+
 	def updateSecret(self,sid,encryptedSecret,hmac):
 		self.system.updateSecret(sid,encryptedSecret,hmac)
 
@@ -75,6 +78,9 @@ class Client:
 			return self.iface.getSecret(sid)
 		else:
 			raise(Exception("Access denied"))
+
+	def getSecretsForUser(self,user):
+		return self.iface.getSecretsForUser(user)
 
 	def updateSecret(self,sid,encryptedSecret,hmac):
 		self.iface.updateSecret(sid,encryptedSecret,hmac)

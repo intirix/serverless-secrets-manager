@@ -43,6 +43,9 @@ class CLI:
 		print("    Get a secret (requires a private key)")
 		print("      secretID - ID of the secret")
 		print("")
+		print("  get-my-secrets")
+		print("    Gets all secrets that the user has access to (requires a private key)")
+		print("")
 		print("  set-secret-field <secretID> <fieldName> [value]")
 		print("    Set a field inside of the secret (requires a private key)")
 		print("      secretID - ID of the secret")
@@ -186,6 +189,34 @@ class CLI:
 			del origSecret["random"]
 
 			print(json.dumps(origSecret,indent=2))
+
+		elif command == "get-my-secrets":
+			privKey = self.client.getUserPrivateKey(self.user,self.getPassword())
+
+			secretEntries = self.client.getSecretsForUser(self.user)
+			print(secretEntries)
+
+			secrets = {}
+
+
+			for sid in secretEntries.keys():
+				secretEntry = secretEntries[sid]
+				encryptedKey = self.crypto.decode(secretEntry["users"][self.user]["encryptedKey"])
+				hmacKey = self.crypto.decode(secretEntry["hmacKey"])
+				storedHmac = secretEntry["hmac"]
+				storedEncryptedSecret = secretEntry["encryptedSecret"]
+
+				if not self.crypto.verifyHmac(hmacKey,storedEncryptedSecret,storedHmac):
+					raise(Exception("Secret verification failed!"))
+
+				origKey = self.crypto.decryptRSA(privKey,encryptedKey)
+				origSecretText = self.crypto.decrypt(origKey,storedEncryptedSecret)
+				origSecret = json.loads(origSecretText)
+				del origSecret["random"]
+				secrets[sid]=origSecret
+
+
+			print(json.dumps(secrets,indent=2))
 
 		elif command == "set-secret-field":
 			if len(self.args)==0:
