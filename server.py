@@ -39,6 +39,12 @@ class Server:
 		self.system.generateKeysForUser(user)
 		return self.system.getUser(user)["publicKey"]
 
+	def getUserEncryptedPrivateKey(self,ctx,user):
+		data = self.system.getUser(user)
+		if data != None and "encryptedPrivateKey" in data:
+			return data["encryptedPrivateKey"]
+		return None
+
 	def getUserPublicKey(self,ctx,user):
 		data = self.system.getUser(user)
 		if data != None and "publicKey" in data:
@@ -47,6 +53,9 @@ class Server:
 
 	def setUserPublicKey(self,ctx,user,pem):
 		return self.system.setUserPublicKey(user,pem)
+
+	def setUserEncryptedPrivateKey(self,ctx,user,data):
+		return self.system.setUserPrivateKey(user,data)
 
 	def addUser(self,ctx,user,post_body):
 		displayName = user

@@ -57,6 +57,15 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 			self.end_headers()
 			self.wfile.write(pem)
 			return
+		elif matches(self.path,["v1","users",None,"keys","private","encrypted"]):
+			user = parts[4]
+			pem = iface.getUserEncryptedPrivateKey(ctx,user)
+			self.send_response(200)
+			self.send_header("Connection", "close")
+			self.send_header("Content-Type","application/octet-stream")
+			self.end_headers()
+			self.wfile.write(pem)
+			return
 
 		if resp == None:
 			self._send_response(404)
@@ -86,6 +95,12 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 		elif matches(self.path,["v1","users",None,"keys","public"]):
 			user = parts[4]
 			if iface.setUserPublicKey(ctx,user,post_body):
+				self._send_response(200)
+			else:
+				self._send_response(404)
+		elif matches(self.path,["v1","users",None,"keys","private","encrypted"]):
+			user = parts[4]
+			if iface.setUserEncryptedPrivateKey(ctx,user,post_body):
 				self._send_response(200)
 			else:
 				self._send_response(404)
@@ -128,6 +143,12 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 		elif matches(self.path,["v1","users",None,"keys","public"]):
 			user = parts[4]
 			if iface.setUserPublicKey(ctx,user,post_body):
+				self._send_response(201)
+			else:
+				self._send_response(404)
+		elif matches(self.path,["v1","users",None,"keys","private","encrypted"]):
+			user = parts[4]
+			if iface.setUserEncryptedPrivateKey(ctx,user,post_body):
 				self._send_response(201)
 			else:
 				self._send_response(404)
