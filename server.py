@@ -66,4 +66,23 @@ class Server:
 		return True
 
 
+	def addSecret(self,ctx,post_body):
+		data = {}
+		if len(post_body)>0:
+			data = json.loads(post_body)
+
+		encryptedKey = data["encryptedKey"]
+		hmacKey = data["hmacKey"]
+		encryptedSecret = data["encryptedSecret"]
+		hmac = data["hmac"]
+
+		return self.system.addSecret(ctx.user,"1",encryptedKey,hmacKey,encryptedSecret,hmac)
+
+	def getSecret(self,ctx,sid):
+		ret = self.system.getSecret(sid)
+		ret["sid"] = sid
+		return ret
+		
+
+
 

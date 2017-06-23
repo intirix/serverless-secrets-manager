@@ -45,6 +45,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 			resp = iface.listUsers(ctx)
 		elif matches(self.path,["v1","users",None]):
 			resp = iface.getUser(ctx,parts[4])
+		elif matches(self.path,["v1","secrets",None]):
+			resp = iface.getSecret(ctx,parts[4])
 
 		if resp == None:
 			self._send_response(404)
@@ -85,6 +87,17 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 			user = parts[4]
 			iface.addUser(ctx,user,post_body)
 			self._send_response(201)
+
+		elif matches(self.path,["v1","secrets"]):
+			sid = iface.addSecret(ctx,post_body)
+			resp = iface.getSecret(ctx,sid)
+
+			self.send_response(201)
+			self.send_header("Connection", "close")
+			self.send_header("Content-Type","application/json")
+			self.end_headers()
+			self.wfile.write(json.dumps(resp,indent=2))
+			
 
 
 if __name__ == '__main__':
