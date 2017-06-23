@@ -37,5 +37,10 @@ class System:
 	def clearUserPrivateKey(self,username):
 		self.db.removeUserField(username,"privateKey")
 
+	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,encryptedSecret):
+		return self.db.addSecret(owner,secretEncryptionProfile,encryptedKey,encryptedSecret)
+
+	def getSecret(self,sid):
+		return self.db.getSecret(sid)
 
 

@@ -7,6 +7,7 @@ from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
 from Crypto import Random
 import base64
+import os
 
 from datetime import datetime, timedelta
 import time
@@ -16,6 +17,9 @@ class Crypto:
 	def keyStretchPassword(self,salt,password,buflen=32):
 		key = scrypt.hash(password=password,salt=salt,buflen=buflen)
 		return key
+
+	def generateRandomKey(self,buflen=32):
+		return os.urandom(buflen)
 
 	def generatePublicPrivateKeys(self):
 		rng = Random.new().read

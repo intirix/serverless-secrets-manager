@@ -12,28 +12,36 @@ class DBInterface:
 
 class MemoryDB(DBInterface):
 	def __init__(self):
-		self.db = {}
-		self.counter = 0
+		self.udb = {}
+		self.sdb = {}
+		self.ucounter = 0
+		self.scounter = 0;
 
 
 	def listUsers(self):
-		return self.db
+		return self.udb
 
 
 	def addUser(self,username,displayName):
-		self.counter = self.counter+1
-		self.db[username]={"id":self.counter,"displayName":displayName}
+		self.ucounter = self.ucounter+1
+		self.udb[username]={"id":self.ucounter,"displayName":displayName}
+		return self.ucounter
 
 	def getUser(self,username):
 		return self.listUsers()[username]
 
 	def updateUserField(self,username,fieldName,value):
-		self.db[username][fieldName]=value
+		self.udb[username][fieldName]=value
 
 	def removeUserField(self,username,fieldName):
-		del self.db[username][fieldName]
+		del self.udb[username][fieldName]
 
+	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,encryptedSecret):
+		self.scounter = self.scounter+1
+		self.sdb[self.scounter]={"secretEncryptionProfile":secretEncryptionProfile,"encryptedSecret":encryptedSecret,"users":{}}
+		self.sdb[self.scounter]["users"][owner]={"encryptedKey":encryptedKey}
+		return self.scounter
 
-
-
+	def getSecret(self,sid):
+		return self.sdb[sid]
 
