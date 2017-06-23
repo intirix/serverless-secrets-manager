@@ -12,6 +12,10 @@ class TestMemoryDB(unittest.TestCase):
 		obj.addUser("user1","Sally")
 		self.assertEqual(1,len(obj.listUsers()))
 
+	def testGetUserWhenUserDoesNotExist(self):
+		obj=db.MemoryDB()
+		self.assertEqual(None,obj.getUser("doesNotExist"))
+
 
 
 if __name__ == '__main__':

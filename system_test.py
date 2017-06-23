@@ -30,7 +30,7 @@ class TestSystem(unittest.TestCase):
 		obj.addUser("user1","Lisa")
 		obj.generateKeysForUser("user1","mypassword")
 		self.assertEqual(True,len(obj.db.getUser("user1")["publicKey"])>128)
-		self.assertEqual(True,len(obj.db.getUser("user1")["privateKey"])>1024)
+		self.assertEqual(True,len(obj.db.getUser("user1")["encryptedPrivateKey"])>1024)
 
 		pubPem = obj.db.getUser("user1")["publicKey"]
 		privPem = obj.getUserPrivateKey("user1","mypassword")
@@ -40,7 +40,7 @@ class TestSystem(unittest.TestCase):
 		self.assertEqual(True,obj.crypto.verify(pubPem,message,sig))
 
 		obj.clearUserPrivateKey("user1")
-		self.assertEqual(True, not "privateKey" in obj.db.getUser("user1") or obj.db.getUser("user1")["privateKey"] == None)
+		self.assertEqual(True, not "encryptedPrivateKey" in obj.db.getUser("user1") or obj.db.getUser("user1")["encryptedPrivateKey"] == None)
 
 	def testAddSecretForSingleUser(self):
 		obj = self.createMockSystem()

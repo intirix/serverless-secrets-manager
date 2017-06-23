@@ -1,10 +1,18 @@
-#!/bin/bash
+#!/bin/bash -e
 
 workspace="$( dirname $0 )"
+
+
 
 (
 	cd "$workspace"
 	workspace="$(pwd)"
+
+
+	for x in *_test.py
+	do
+		.contents/bin/python $x
+	done
 
 	echo zip lambda.zip *.py
 	zip lambda.zip *.py
