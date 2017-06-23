@@ -20,6 +20,8 @@ class CLI:
 		print(sys.argv[0]+" <flags> <command> <arguments>")
 		print("Flags:")
 		print("  -d - direct mode - Directly contact database instead of going through REST API")
+		print("  -k - private key file - Encrypted private key for the user")
+		print("  -b - base url - Base URL of the REST service")
 		print("  -u [username] - user to log in a")
 		print("")
 		print("Commands:")
@@ -70,16 +72,23 @@ class CLI:
 
 	def parse(self):
 
-		optlist, self.args = getopt.getopt(self.args, 'du:')
+		optlist, self.args = getopt.getopt(self.args, 'du:k:b:')
 
 		self.mode = "rest"
 		self.user = "admin"
+		self.baseurl = None
+		self.privateKeyFile = None
+		self.privateKey = None
 
 		for o, a in optlist:
 			if o=='-d':
 				self.mode = "direct"
 			elif o=='-u':
 				self.user = a
+			elif o=='-b':
+				self.baseurl = a
+			elif o=='-k':
+				self.privateKeyFile = a
 			else:
 				assert False, "unhandled option"
 
@@ -93,24 +102,37 @@ class CLI:
 			self.system = system.System()
 			self.system.setDB(db.JsonDB('./local'))
 			self.client = client.Client(client.ClientSystemInterface(self.system))
+			self.system.init()
 		else:
-			raise(Exception("Mode ["+self.mode+"] not implemented yet"))
+			if self.baseurl == None:
+				self.help()
+				raise(Exception("-b required for rest mode"))
+			self.client = client.Client(client.ClientRestInterface(self.baseurl))
 
-		self.system.init()
 
 	def login(self):
 		print("Logging in as user: "+self.user)
+		self.password = None
 		if self.mode == 'direct':
 			# direct access doesn't require a password
 			self.client.login(self.user,"")
-			self.password = None
 		else:
-			raise(Exception("Mode ["+self.mode+"] not implemented yet"))
+			self.getPrivateKey()
 
 	def getPassword(self):
 		if self.password == None:
 			self.password = getpass.getpass("Password:")
 		return self.password
+
+	def getPrivateKey(self):
+		if self.privateKey == None:
+			f = open(self.privateKeyFile,"r")
+			encryptedPrivateKey = f.read()
+			f.close()
+
+			aesKey = self.crypto.keyStretchPassword(self.user,self.getPassword())
+			self.privateKey = self.crypto.decrypt(aesKey,encryptedPrivateKey)
+		return self.privateKey
 
 	def run(self):
 

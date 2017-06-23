@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import requests
 
 
 class ClientSystemInterface:
@@ -41,6 +42,17 @@ class ClientSystemInterface:
 
 	def updateSecret(self,sid,encryptedSecret,hmac):
 		self.system.updateSecret(sid,encryptedSecret,hmac)
+
+class ClientRestInterface:
+
+	def __init__(self,baseurl):
+		self.baseurl = baseurl
+
+	def listUsers(self):
+		r = requests.get(self.baseurl+"/v1/users")
+		r.raise_for_status()
+		return r.json()
+			
 
 class Client:
 
