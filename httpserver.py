@@ -10,6 +10,7 @@ import system
 import db
 import client
 import server
+import urlparse
 
 PORT = 8000
 
@@ -47,6 +48,15 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 			resp = iface.getUser(ctx,parts[4])
 		elif matches(self.path,["v1","secrets",None]):
 			resp = iface.getSecret(ctx,parts[4])
+		elif matches(self.path,["v1","users",None,"keys","public"]):
+			user = parts[4]
+			pem = iface.getUserPublicKey(ctx,user)
+			self.send_response(200)
+			self.send_header("Connection", "close")
+			self.send_header("Content-Type","application/x-pem-file")
+			self.end_headers()
+			self.wfile.write(pem)
+			return
 
 		if resp == None:
 			self._send_response(404)
@@ -73,6 +83,13 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 				self._send_response(200)
 			else:
 				self._send_response(404)
+		elif matches(self.path,["v1","users",None,"keys","public"]):
+			user = parts[4]
+			if iface.setUserPublicKey(ctx,user,post_body):
+				self._send_response(200)
+			else:
+				self._send_response(404)
+			
 		elif matches(self.path,["v1","secrets",None]):
 			sid = parts[4]
 			if iface.updateSecret(ctx,sid,post_body):
@@ -89,6 +106,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 		parts = self.path.split('?')[0].split('/')
 		iface = self.server.serverIface
 
+		qs = urlparse.parse_qs(urlparse.urlparse(self.path).query)
+
 		if matches(self.path,["v1","users",None]):
 			user = parts[4]
 			iface.addUser(ctx,user,post_body)
@@ -97,6 +116,21 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 		elif matches(self.path,["v1","secrets"]):
 			sid = iface.addSecret(ctx,post_body)
 			self._sendSecret(201,ctx,sid)
+		elif matches(self.path,["v1","users",None,"keys"]):
+			user = parts[4]
+			if qs.get("generate","false")=="true":
+				pem = iface.generateKeysForUser(ctx,user)
+				self.send_response(200)
+				self.send_header("Connection", "close")
+				self.send_header("Content-Type","application/x-pem-file")
+				self.end_headers()
+				self.wfile.write(pem)
+		elif matches(self.path,["v1","users",None,"keys","public"]):
+			user = parts[4]
+			if iface.setUserPublicKey(ctx,user,post_body):
+				self._send_response(201)
+			else:
+				self._send_response(404)
 
 	def _sendSecret(self,code,ctx,sid):
 		iface = self.server.serverIface

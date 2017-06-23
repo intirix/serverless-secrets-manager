@@ -35,6 +35,18 @@ class Server:
 			return None
 		return self._getUserData(data)
 
+	def generateKeysForUser(self,ctx,user):
+		self.system.generateKeysForUser(user)
+		return self.system.getUser(user)["publicKey"]
+
+	def getUserPublicKey(self,ctx,user):
+		data = self.system.getUser(user)
+		if data != None and "publicKey" in data:
+			return data["publicKey"]
+		return None
+
+	def setUserPublicKey(self,ctx,user,pem):
+		return self.system.setUserPublicKey(user,pem)
 
 	def addUser(self,ctx,user,post_body):
 		displayName = user
