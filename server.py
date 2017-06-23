@@ -113,6 +113,11 @@ class Server:
 		ret = self.system.getSecret(sid)
 		ret["sid"] = sid
 		return ret
+
+	def getMySecrets(self,ctx,user):
+		if ctx.user==user:
+			return self.system.getSecretsForUser(ctx.user)
+		return None
 		
 
 

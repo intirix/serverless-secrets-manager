@@ -48,6 +48,9 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 			resp = iface.getUser(ctx,parts[4])
 		elif matches(self.path,["v1","secrets",None]):
 			resp = iface.getSecret(ctx,parts[4])
+		elif matches(self.path,["v1","users",None,"secrets"]):
+			user = parts[4]
+			resp = iface.getMySecrets(ctx,user)
 		elif matches(self.path,["v1","users",None,"keys","public"]):
 			user = parts[4]
 			pem = iface.getUserPublicKey(ctx,user)
