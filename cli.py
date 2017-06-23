@@ -45,12 +45,20 @@ class CLI:
 		print("      fieldName - name of the field to set")
 		print("      value - value to set")
 		print("        optional - will prompt for value if not provided")
+		print("")
 		print("  export-user-public-key [user] [filename]")
 		print("    Export a user's public key")
 		print("      user - The user who's public key should be exported")
 		print("        optional - defaults to the logged in user")
 		print("      filename - Filename to write the public key to")
 		print("        optional - if left out, the public key will be written to the console")
+		print("")
+		print("  export-user-encrypted-private-key [user] [filename]")
+		print("    Export a user's encrypted private key")
+		print("      user - The user who's encrypted private key should be exported")
+		print("        optional - defaults to the logged in user")
+		print("      filename - Filename to write the encrypted private key to")
+		print("        optional - if left out, the encryptedprivate key will be written to the console")
 		print("")
 
 	def parse(self):
@@ -232,6 +240,24 @@ class CLI:
 				print("Writing public key to "+filename)
 				f = open(filename,"w")
 				f.write(pubKey)
+				f.close()
+
+		elif command == "export-user-encrypted-private-key":
+			exuser = self.user
+			filename = None
+			if len(self.args)>0:
+				exuser = self.args[0]
+				if len(self.args)>1:
+					filename = self.args[1]
+
+			privKey = self.client.getUserPrivateKeyEncrypted(exuser)
+
+			if filename == None:
+				print(privKey)
+			else:
+				print("Writing encrypted private key to "+filename)
+				f = open(filename,"w")
+				f.write(privKey)
 				f.close()
 
 		else:
