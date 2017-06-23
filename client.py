@@ -16,6 +16,10 @@ class ClientSystemInterface:
 	def addUser(self,user,display):
 		return self.system.addUser(user,display)
 
+	def canCreateUser(self,user):
+		# Direct access always can create users
+		return True
+
 
 class Client:
 
@@ -24,12 +28,13 @@ class Client:
 
 	def login(self,username,password):
 		self.username = username
-		return
+		return self.iface.login(username,password)
 
 	def listUsers(self):
 		return self.iface.listUsers()
 
 	def addUser(self,user,display):
-		return self.iface.addUser(user,display)
+		if self.iface.canCreateUser(self.username):
+			return self.iface.addUser(user,display)
 
 

@@ -56,8 +56,11 @@ class CLI:
 		self.system.init()
 
 	def login(self):
-		# Only valid for REST, which isn't implemented yet
-		return
+		if self.mode == 'direct':
+			# direct access doesn't require a password
+			self.client.login("admin","")
+		else:
+			raise(Exception("Mode ["+self.mode+"] not implemented yet"))
 
 	def run(self):
 
