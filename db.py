@@ -53,6 +53,10 @@ class MemoryDB(DBInterface):
 		self.sdb[self.scounter]["users"][owner]={"encryptedKey":encryptedKey,"canWrite":"Y"}
 		return self.scounter
 
+	def updateSecret(self,sid,encryptedSecret,hmac):
+		self.sdb[sid]["encryptedSecret"]=encryptedSecret
+		self.sdb[sid]["hmac"]=hmac
+
 	def getSecret(self,sid):
 		return self.sdb[sid]
 

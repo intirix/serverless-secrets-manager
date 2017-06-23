@@ -37,6 +37,14 @@ class CLI:
 		print("")
 		print("  get-secret <secretID>")
 		print("    Get a secret (requires a private key)")
+		print("      secretID - ID of the secret")
+		print("")
+		print("  set-secret-field <secretID> <fieldName> [value]")
+		print("    Set a field inside of the secret (requires a private key)")
+		print("      secretID - ID of the secret")
+		print("      fieldName - name of the field to set")
+		print("      value - value to set")
+		print("        optional - will prompt for value if not provided")
 		print("")
 
 	def parse(self):
@@ -151,7 +159,56 @@ class CLI:
 			del origSecret["random"]
 
 			print(json.dumps(origSecret,indent=2))
+
+		elif command == "set-secret-field":
+			if len(self.args)==0:
+				self.help()
+				raise Exception("Expected arguments <secretID> and <fieldName>")
+			elif len(self.args)==1:
+				self.help()
+				raise Exception("Expected argument <fieldName>")
+
+
+			sid = self.args[0]
+			fieldName = self.args[1]
+
+			# Prompt for the password before prompting for the value
+			password = self.getPassword()
+
+
+			# Get the value after getting the password
+			value = None
+			if len(self.args)==3:
+				value = self.args[2]
+			else:
+				value = getpass.getpass("Value:")
+
+
+			# First decrypt
+			privKey = self.client.getUserPrivateKey(self.user,password)
+			secretEntry = self.client.getSecret(sid)
+
+
+			encryptedKey = self.crypto.decode(secretEntry["users"][self.user]["encryptedKey"])
+			hmacKey = self.crypto.decode(secretEntry["hmacKey"])
+			storedHmac = secretEntry["hmac"]
+			storedEncryptedSecret = secretEntry["encryptedSecret"]
+
+			if not self.crypto.verifyHmac(hmacKey,storedEncryptedSecret,storedHmac):
+				raise(Exception("Secret verification failed!"))
+
+			aesKey = self.crypto.decryptRSA(privKey,encryptedKey)
+			origSecretText = self.crypto.decrypt(aesKey,storedEncryptedSecret)
+			origSecret = json.loads(origSecretText)
+
+			# Set the value
+			origSecret[fieldName] = value
 			
+			# Encrypt the secret
+			encryptedSecret = self.crypto.encrypt(aesKey,json.dumps(origSecret))
+			hmac = self.crypto.createHmac(hmacKey,encryptedSecret)
+
+			self.client.updateSecret(sid,encryptedSecret,hmac)
 		else:
 			self.help()
 			raise Exception("Unknown command: "+command)

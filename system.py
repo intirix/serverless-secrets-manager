@@ -65,6 +65,11 @@ class System:
 		self.db.sync()
 		return sid
 
+	def updateSecret(self,sid,encryptedSecret,hmac):
+		self.log.info("Updating secret "+sid)
+		self.db.updateSecret(sid,encryptedSecret,hmac)
+		self.db.sync()
+
 	def getSecret(self,sid):
 		return self.db.getSecret(sid)
 

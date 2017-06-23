@@ -33,6 +33,9 @@ class ClientSystemInterface:
 	def getSecret(self,sid):
 		return self.system.getSecret(sid)
 
+	def updateSecret(self,sid,encryptedSecret,hmac):
+		self.system.updateSecret(sid,encryptedSecret,hmac)
+
 class Client:
 
 	def __init__(self,iface):
@@ -63,4 +66,7 @@ class Client:
 			return self.iface.getSecret(sid)
 		else:
 			raise(Exception("Access denied"))
+
+	def updateSecret(self,sid,encryptedSecret,hmac):
+		self.iface.updateSecret(sid,encryptedSecret,hmac)
 
