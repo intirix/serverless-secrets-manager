@@ -19,11 +19,13 @@ class System:
 			self.log.warn("Creating admin user with default password")
 			self.addUser("admin","admin")
 			self.generateKeysForUser("admin","password")
+		return True
 
 	def addUser(self,username,displayName):
 		self.log.info("Creating user "+username)
-		self.db.addUser(username,displayName)
+		ret = self.db.addUser(username,displayName)
 		self.db.sync()
+		return ret
 
 	def listUsers(self):
 		return self.db.listUsers()
@@ -35,16 +37,19 @@ class System:
 		self.log.info("Changing display name for "+username)
 		self.db.updateUserField(username,"displayName",displayName)
 		self.db.sync()
+		return True
 
 	def setUserPublicKey(self,username,pem):
 		self.log.info("Changing the public key for "+username)
 		self.db.updateUserField(username,"publicKey",pem)
 		self.db.sync()
+		return True
 
 	def setUserPrivateKey(self,username,key):
 		self.log.info("Changing the private key for "+username)
 		self.db.updateUserField(username,"encryptedPrivateKey",key)
 		self.db.sync()
+		return True
 
 	def generateKeysForUser(self,username,password):
 		self.log.info("Generating keys for "+username)
@@ -55,6 +60,7 @@ class System:
 		encryptedPriv = self.crypto.encrypt(key,priv)
 		self.setUserPrivateKey(username,encryptedPriv)
 		self.db.sync()
+		return True
 
 	def getUserPrivateKey(self,username,password):
 		self.log.warn("Retriving private key for "+username)
@@ -67,6 +73,7 @@ class System:
 		self.log.info("Removing private key for "+username)
 		self.db.removeUserField(username,"encryptedPrivateKey")
 		self.db.sync()
+		return True
 
 	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,hmacKey,encryptedSecret,hmac):
 		self.log.info("Adding secret for "+owner+", hmac="+hmac)
@@ -78,6 +85,7 @@ class System:
 		self.log.info("Updating secret "+sid)
 		self.db.updateSecret(sid,encryptedSecret,hmac)
 		self.db.sync()
+		return True
 
 	def getSecret(self,sid):
 		return self.db.getSecret(sid)
@@ -90,5 +98,6 @@ class System:
 		if username in entry["users"]:
 			userEntry = entry["users"][username]
 			return "canWrite" in userEntry and "Y" == userEntry["canWrite"]
+		return False
 
 

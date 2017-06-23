@@ -73,6 +73,12 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 				self._send_response(200)
 			else:
 				self._send_response(404)
+		elif matches(self.path,["v1","secrets",None]):
+			sid = parts[4]
+			if iface.updateSecret(ctx,sid,post_body):
+				self._sendSecret(200,ctx,sid)
+			else:
+				self._send_response(404)
 
 	def do_POST(self):
 		log = logging.getLogger("httpHandler")
@@ -90,13 +96,17 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 		elif matches(self.path,["v1","secrets"]):
 			sid = iface.addSecret(ctx,post_body)
-			resp = iface.getSecret(ctx,sid)
+			self._sendSecret(201,ctx,sid)
 
-			self.send_response(201)
-			self.send_header("Connection", "close")
-			self.send_header("Content-Type","application/json")
-			self.end_headers()
-			self.wfile.write(json.dumps(resp,indent=2))
+	def _sendSecret(self,code,ctx,sid):
+		iface = self.server.serverIface
+		resp = iface.getSecret(ctx,sid)
+
+		self.send_response(code)
+		self.send_header("Connection", "close")
+		self.send_header("Content-Type","application/json")
+		self.end_headers()
+		self.wfile.write(json.dumps(resp,indent=2))
 			
 
 
