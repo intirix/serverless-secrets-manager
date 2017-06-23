@@ -33,3 +33,23 @@ class Server:
 		if data==None:
 			return None
 		return self._getUserData(data)
+
+
+	def addUser(self,ctx,user,post_body):
+		displayName = user
+
+		data = {}
+		if len(post_body)>0:
+			data = json.loads(post_body)
+			if "displayName" in data:
+				displayName = data["displayName"]
+
+		self.system.addUser(user,displayName)
+
+		if "publicKey" in data:
+			self.syste.setUserPublicKey(user,data["publicKey"])
+		if "encryptedPrivateKey" in data:
+			self.syste.setUserPrivateKey(user,data["encryptedPrivateKey"])
+
+
+
