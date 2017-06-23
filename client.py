@@ -48,7 +48,7 @@ class Client:
 	def listUsers(self):
 		return self.iface.listUsers()
 
-	def getUsersPublicKey(self,user):
+	def getUserPublicKey(self,user):
 		return self.listUsers()[user]["publicKey"]
 
 	def getUserPrivateKey(self,user,password):

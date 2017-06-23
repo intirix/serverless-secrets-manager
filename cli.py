@@ -45,6 +45,12 @@ class CLI:
 		print("      fieldName - name of the field to set")
 		print("      value - value to set")
 		print("        optional - will prompt for value if not provided")
+		print("  export-user-public-key [user] [filename]")
+		print("    Export a user's public key")
+		print("      user - The user who's public key should be exported")
+		print("        optional - defaults to the logged in user")
+		print("      filename - Filename to write the public key to")
+		print("        optional - if left out, the public key will be written to the console")
 		print("")
 
 	def parse(self):
@@ -113,7 +119,7 @@ class CLI:
 			self.client.addUser(user,display)
 		elif command == "create-secret":
 
-			pubKey = self.client.getUsersPublicKey(self.user)
+			pubKey = self.client.getUserPublicKey(self.user)
 			aesKey = self.crypto.generateRandomKey()
 			hmacKey = self.crypto.generateRandomKey()
 
@@ -209,6 +215,25 @@ class CLI:
 			hmac = self.crypto.createHmac(hmacKey,encryptedSecret)
 
 			self.client.updateSecret(sid,encryptedSecret,hmac)
+
+		elif command == "export-user-public-key":
+			exuser = self.user
+			filename = None
+			if len(self.args)>0:
+				exuser = self.args[0]
+				if len(self.args)>1:
+					filename = self.args[1]
+
+			pubKey = self.client.getUserPublicKey(exuser)
+
+			if filename == None:
+				print(pubKey)
+			else:
+				print("Writing public key to "+filename)
+				f = open(filename,"w")
+				f.write(pubKey)
+				f.close()
+
 		else:
 			self.help()
 			raise Exception("Unknown command: "+command)
