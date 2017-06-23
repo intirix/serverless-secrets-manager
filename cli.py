@@ -18,7 +18,14 @@ class CLI:
 		print("  -d - direct mode - Directly contact database instead of going through REST API")
 		print("")
 		print("Commands:")
-		print("  list-users - List the users")
+		print("  list-users")
+		print("    Lists users")
+		print("")
+		print("  add-user <user> [displayName]")
+		print("    Add a user")
+		print("      user - username")
+		print("      displayName - what get's displayed to users")
+		print("        optional - defaults to username")
 		print("")
 
 	def parse(self):
@@ -55,12 +62,23 @@ class CLI:
 	def run(self):
 
 		command = self.args[0]
+		self.args = self.args[1:]
 
 		if command == "list-users":
 			print("Users:")
 			print("")
 			for user in self.client.listUsers():
 				print(user)
+		elif command == "add-user":
+			if len(self.args)==0:
+				self.help()
+				raise Exception("Expected argument <user>")
+			user = self.args[0]
+			display = user
+			if len(self.args)==2:
+				display = self.args[1]
+
+			self.client.addUser(user,display)
 		else:
 			self.help()
 			raise Exception("Unknown command: "+command)

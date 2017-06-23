@@ -13,6 +13,9 @@ class ClientSystemInterface:
 	def listUsers(self):
 		return self.system.listUsers()
 
+	def addUser(self,user,display):
+		return self.system.addUser(user,display)
+
 
 class Client:
 
@@ -25,5 +28,8 @@ class Client:
 
 	def listUsers(self):
 		return self.iface.listUsers()
+
+	def addUser(self,user,display):
+		return self.iface.addUser(user,display)
 
 
