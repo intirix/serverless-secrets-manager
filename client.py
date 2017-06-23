@@ -10,6 +10,8 @@ class ClientSystemInterface:
 	def login(self,username,password):
 		return
 
+	def listUsers(self):
+		return self.system.listUsers()
 
 
 class Client:
@@ -21,6 +23,7 @@ class Client:
 		self.username = username
 		return
 
-
+	def listUsers(self):
+		return self.iface.listUsers()
 
 

@@ -25,6 +25,9 @@ class System:
 		self.db.addUser(username,displayName)
 		self.db.sync()
 
+	def listUsers(self):
+		return self.db.listUsers()
+
 	def setUserPublicKey(self,username,pem):
 		self.log.info("Changing the public key for "+username)
 		self.db.updateUserField(username,"publicKey",pem)

@@ -12,6 +12,15 @@ class CLI:
 	def __init__(self,args):
 		self.args = args
 
+	def help(self):
+		print(sys.argv[0]+" <flags> <command> <arguments>")
+		print("Flags:")
+		print("  -d - direct mode - Directly contact database instead of going through REST API")
+		print("")
+		print("Commands:")
+		print("  list-users - List the users")
+		print("")
+
 	def parse(self):
 
 		optlist, self.args = getopt.getopt(self.args, 'd')
@@ -24,6 +33,10 @@ class CLI:
 			else:
 				assert False, "unhandled option"
 
+		if len(self.args)==0:
+			self.help()
+			sys.exit(1)
+
 	def init(self):
 
 		if self.mode == 'direct':
@@ -35,8 +48,22 @@ class CLI:
 
 		self.system.init()
 
-	def run(self):
+	def login(self):
+		# Only valid for REST, which isn't implemented yet
 		return
+
+	def run(self):
+
+		command = self.args[0]
+
+		if command == "list-users":
+			print("Users:")
+			print("")
+			for user in self.client.listUsers():
+				print(user)
+		else:
+			self.help()
+			raise Exception("Unknown command: "+command)
 
 
 if __name__ == "__main__":
@@ -46,4 +73,5 @@ if __name__ == "__main__":
 	cli = CLI(sys.argv[1:])
 	cli.parse()
 	cli.init()
+	cli.login()
 	cli.run()
