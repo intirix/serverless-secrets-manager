@@ -27,9 +27,9 @@ class MemoryDB(DBInterface):
 
 
 	def addUser(self,username,displayName):
-		self.ucounter = self.ucounter+1
-		self.udb[username]={"id":self.ucounter,"displayName":displayName}
-		return self.ucounter
+		uid = str(uuid.uuid4())
+		self.udb[username]={"id":uid,"displayName":displayName,"admin":"N","enabled":"Y"}
+		return uid
 
 	def getUser(self,username):
 		if username in self.udb:

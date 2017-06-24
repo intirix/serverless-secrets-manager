@@ -18,6 +18,7 @@ class System:
 		if self.db.getUser("admin")==None:
 			self.log.warn("Creating admin user with default password")
 			self.addUser("admin","admin")
+			self.grantAdmin("admin")
 			self.generateKeysForUser("admin","password")
 		return True
 
@@ -38,6 +39,31 @@ class System:
 		self.db.updateUserField(username,"displayName",displayName)
 		self.db.sync()
 		return True
+
+	def grantAdmin(self,username):
+		self.log.info("Granting admin access to "+username)
+		self.db.updateUserField(username,"admin","Y")
+		self.db.sync()
+		return True
+
+	def revokeAdmin(self,username):
+		self.log.info("Revoking admin access from "+username)
+		self.db.updateUserField(username,"admin","N")
+		self.db.sync()
+		return True
+
+	def enableUser(self,username):
+		self.log.info("Enabling user "+username)
+		self.db.updateUserField(username,"enabled","Y")
+		self.db.sync()
+		return True
+
+	def disableUser(self,username):
+		self.log.info("Disabling user "+username)
+		self.db.updateUserField(username,"enabled","N")
+		self.db.sync()
+		return True
+
 
 	def getUserPublicKey(self,username):
 		data = self.getUser(username)
