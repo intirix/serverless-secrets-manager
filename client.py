@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import requests
-
+import json
 
 class ClientSystemInterface:
 
@@ -57,9 +57,32 @@ class ClientRestInterface:
 		r.raise_for_status()
 		return r.json()
 
+	def addUser(self,user,display):
+		data={"displayName":display}
+		r = requests.post(self.baseurl+"/v1/users/"+user,auth=(self.username,self.password),data=json.dumps(data))
+		r.raise_for_status()
+		return r.json()
+
 	def generateKeysForUser(self,user,password):
 		r = requests.post(self.baseurl+"/v1/users/"+user+"/keys?generate=true",auth=(self.username,self.password),data=password)
 		r.raise_for_status()
+
+	def getUserPrivateKey(self,user,password):
+		raise(Excepion("Not implemented"))
+
+	def canCreateUser(self,user):
+		# Delegate to the server
+		return True
+
+	def canUserReadSecret(self,user,sid):
+		# Delegate to the server
+		return True
+
+	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,hmacKey,encryptedSecret,hmac):
+		data = {"encryptedSecret":encryptedSecret,"hmac":hmac,"secretEncryptionProfile":"1","encryptedKey":encryptedKey,"hmacKey":hmacKey}
+		r = requests.post(self.baseurl+"/v1/secrets",auth=(self.username,self.password),data=json.dumps(data))
+		r.raise_for_status()
+		return r.json()
 
 	def getSecret(self,sid):
 		r = requests.get(self.baseurl+"/v1/secrets/"+sid,auth=(self.username,self.password))
@@ -71,9 +94,12 @@ class ClientRestInterface:
 		r.raise_for_status()
 		return r.json()
 
-	def canUserReadSecret(self,user,sid):
-		# Delegate to the server
-		return True
+	def updateSecret(self,sid,encryptedSecret,hmac):
+		data = {"encryptedSecret":encryptedSecret,"hmac":hmac}
+		r = requests.put(self.baseurl+"/v1/secrets/"+sid,auth=(self.username,self.password),data=json.dumps(data))
+		r.raise_for_status()
+		return r.json()
+
 
 class Client:
 

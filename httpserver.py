@@ -102,19 +102,19 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 			user = parts[4]
 
 			if iface.updateUser(ctx,user,post_body):
-				self._send_response(200)
+				self._sendUser(200,ctx,user)
 			else:
 				self._send_response(404)
 		elif matches(self.path,["v1","users",None,"keys","public"]):
 			user = parts[4]
 			if iface.setUserPublicKey(ctx,user,post_body):
-				self._send_response(200)
+				self._sendUser(200,ctx,user)
 			else:
 				self._send_response(404)
 		elif matches(self.path,["v1","users",None,"keys","private","encrypted"]):
 			user = parts[4]
 			if iface.setUserEncryptedPrivateKey(ctx,user,post_body):
-				self._send_response(200)
+				self._sendUser(200,ctx,user)
 			else:
 				self._send_response(404)
 			
@@ -144,7 +144,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 		if matches(self.path,["v1","users",None]):
 			user = parts[4]
 			iface.addUser(ctx,user,post_body)
-			self._send_response(201)
+			self._sendUser(201,ctx,user)
 
 		elif matches(self.path,["v1","secrets"]):
 			sid = iface.addSecret(ctx,post_body)
@@ -185,6 +185,15 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 		self.end_headers()
 		self.wfile.write(json.dumps(resp,indent=2))
 			
+	def _sendUser(self,code,ctx,user):
+		iface = self.server.serverIface
+		resp = iface.getUser(ctx,user)
+
+		self.send_response(code)
+		self.send_header("Connection", "close")
+		self.send_header("Content-Type","application/json")
+		self.end_headers()
+		self.wfile.write(json.dumps(resp,indent=2))
 
 
 if __name__ == '__main__':
