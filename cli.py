@@ -112,7 +112,8 @@ class CLI:
 			if self.secretsTable==None or self.usersTable==None:
 				self.system.setDB(db.JsonDB('./local'))
 			else:
-				self.system.setDB(db.DynamoDB(self.usersTable,self.secretsTable))
+				mydb = db.CacheDB(db.DynamoDB(self.usersTable,self.secretsTable))
+				self.system.setDB(mydb)
 			self.client = client.Client(client.ClientSystemInterface(self.system))
 			self.system.init()
 		else:

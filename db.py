@@ -235,6 +235,48 @@ class MemoryDB(DBInterface):
 
 		return json.loads(json.dumps(ret))
 
+class CacheDB(MemoryDB):
+	def __init__(self,child):
+		MemoryDB.__init__(self)
+		self.child = child
+		self._refreshAllUsers()
+
+	def _refreshAllUsers(self):
+		self.udb = self.child.listUsers()
+
+	def _refreshUser(self,user):
+		self.udb[user] = self.child.getUser(user)
+
+	def listUsers(self):
+		return json.loads(json.dumps(self.udb))
+
+	def addUser(self,username,displayName):
+		ret = self.child.addUser(username,displayName)
+		self._refreshUser(username)
+		return ret
+
+	def updateUserField(self,username,fieldName,value):
+		ret = self.child.updateUserField(username,fieldName,value)
+		self._refreshUser(username)
+		return ret
+
+	def removeUserField(self,username,fieldName):
+		ret = self.child.removeUserField(username,fieldName)
+		self._refreshUser(username)
+		return ret
+
+	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,hmacKey,encryptedSecret,hmac):
+		return self.child.addSecret(owner,secretEncryptionProfile,encryptedKey,hmacKey,encryptedSecret,hmac)
+
+	def updateSecret(self,sid,encryptedSecret,hmac):
+		return self.child.updateSecret(sid,encryptedSecret,hmac)
+
+	def getSecret(self,sid):
+		return self.child.getSecret(sid)
+
+	def getSecretsForUser(self,user):
+		return self.child.getSecretsForUser(user)
+
 class JsonDB(MemoryDB):
 	def __init__(self,path):
 		MemoryDB.__init__(self)
