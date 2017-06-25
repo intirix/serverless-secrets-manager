@@ -23,6 +23,8 @@ class CLI:
 		print("  -d - direct mode - Directly contact database instead of going through REST API")
 		print("  -k - private key file - Encrypted private key for the user")
 		print("  -b - base url - Base URL of the REST service")
+		print("  -s - secrets table - Name of the secrets DynamoDB table")
+		print("  -t - users table - Name of the users DynamoDB table")
 		print("  -u [username] - user to log in a")
 		print("")
 		print("Commands:")
@@ -73,13 +75,15 @@ class CLI:
 
 	def parse(self):
 
-		optlist, self.args = getopt.getopt(self.args, 'du:k:b:')
+		optlist, self.args = getopt.getopt(self.args, 'du:k:b:s:t:')
 
 		self.mode = "rest"
 		self.user = "admin"
 		self.baseurl = None
 		self.privateKeyFile = None
 		self.privateKey = None
+		self.secretsTable = None
+		self.usersTable = None
 
 		for o, a in optlist:
 			if o=='-d':
@@ -90,6 +94,10 @@ class CLI:
 				self.baseurl = a
 			elif o=='-k':
 				self.privateKeyFile = a
+			elif o=='-s':
+				self.secretsTable = a
+			elif o=='-t':
+				self.usersTable = a
 			else:
 				assert False, "unhandled option"
 
@@ -101,7 +109,10 @@ class CLI:
 
 		if self.mode == 'direct':
 			self.system = system.System()
-			self.system.setDB(db.JsonDB('./local'))
+			if self.secretsTable==None or self.usersTable==None:
+				self.system.setDB(db.JsonDB('./local'))
+			else:
+				self.system.setDB(db.DynamoDB(self.usersTable,self.secretsTable))
 			self.client = client.Client(client.ClientSystemInterface(self.system))
 			self.system.init()
 		else:
