@@ -2,6 +2,7 @@
 
 import json
 import crypto
+import accessrules
 import logging
 
 class Context:
@@ -9,6 +10,8 @@ class Context:
 	def __init__(self,user):
 		self.user = user
 
+class AccessDeniedException(Exception):
+	pass
 
 
 class Server:
@@ -16,16 +19,24 @@ class Server:
 	def __init__(self,system):
 		self.system = system
 		self.crypto = crypto.Crypto()
+		self.rules = accessrules.AccessRules(self.system)
 		self.log = logging.getLogger("server")
 
 	def validateAuthentication(self,username,password):
 		try:
-			data = json.loads(password)
-			token = data["token"]
-			signedToken = data["signed"]
-			pub = self.system.getUserPublicKey(username)
-			if self.crypto.verify(pub,token,signedToken):
-				return Context(username)
+			if self.system.getUser(username)==None:
+				self.log.warn("Unknown user: "+username)
+			elif self.rules.isEnabled(username):
+				data = json.loads(password)
+				token = data["token"]
+				signedToken = data["signed"]
+				pub = self.system.getUserPublicKey(username)
+				if self.crypto.verify(pub,token,signedToken):
+					return Context(username)
+				else:
+					self.log.warn("Failed to verify authentication for "+username)
+			else:
+				self.log.warn("Disabled user "+username+" attempted to login")
 		except:
 			self.log.exception("Failed login for user: "+username)
 		return None
@@ -61,28 +72,40 @@ class Server:
 		return self._getUserData(data)
 
 	def generateKeysForUser(self,ctx,user,password):
+		if not self.rules.canChangeUserKeys(ctx.user,user):
+			raise AccessDeniedException()
 		self.system.generateKeysForUser(user,password)
 		return self.system.getUser(user)["publicKey"]
 
 	def getUserEncryptedPrivateKey(self,ctx,user):
+		if not self.rules.canUserExportPrivateKey(ctx.user,user):
+			raise AccessDeniedException()
 		data = self.system.getUser(user)
 		if data != None and "encryptedPrivateKey" in data:
 			return data["encryptedPrivateKey"]
 		return None
 
 	def getUserPublicKey(self,ctx,user):
+		if not self.rules.canUserExportPublicKey(ctx.user,user):
+			raise AccessDeniedException()
 		data = self.system.getUser(user)
 		if data != None and "publicKey" in data:
 			return data["publicKey"]
 		return None
 
 	def setUserPublicKey(self,ctx,user,pem):
+		if not self.rules.canChangeUserKeys(ctx.user,user):
+			raise AccessDeniedException()
 		return self.system.setUserPublicKey(user,pem)
 
 	def setUserEncryptedPrivateKey(self,ctx,user,data):
+		if not self.rules.canChangeUserKeys(ctx.user,user):
+			raise AccessDeniedException()
 		return self.system.setUserPrivateKey(user,data)
 
 	def addUser(self,ctx,user,post_body):
+		if not self.rules.canCreateUser(ctx.user):
+			raise AccessDeniedException()
 		displayName = user
 
 		data = {}
@@ -103,12 +126,15 @@ class Server:
 		if len(post_body)>0:
 			data = json.loads(post_body)
 
-		if "displayName" in data:
-			self.system.setUserDisplayName(user,data["displayName"])
-		if "publicKey" in data:
-			self.system.setUserPublicKey(user,data["publicKey"])
-		if "encryptedPrivateKey" in data:
-			self.system.setUserPrivateKey(user,data["encryptedPrivateKey"])
+		if self.rules.canUpdateUserProfile(ctx.user,user):
+			if "displayName" in data:
+				self.system.setUserDisplayName(user,data["displayName"])
+
+		if self.rules.canChangeUserKeys(ctx.user,user):
+			if "publicKey" in data:
+				self.system.setUserPublicKey(user,data["publicKey"])
+			if "encryptedPrivateKey" in data:
+				self.system.setUserPrivateKey(user,data["encryptedPrivateKey"])
 		return True
 
 

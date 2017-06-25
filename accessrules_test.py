@@ -49,6 +49,28 @@ class TestAccessRules(unittest.TestCase):
 		obj.system.disableUser("nonadmin")
 		self.assertEqual(False,obj.canChangeUserKeys("nonadmin","nonadmin"))
 
+
+
+	def testUserCanChangeOwnProfile(self):
+		obj = self.createMock()
+		obj.system.addUser("nonadmin","nonadmin")
+		self.assertEqual(True,obj.canUpdateUserProfile("nonadmin","nonadmin"))
+
+	def testNonAdminUserCannotChangeSomeoneElsesProfile(self):
+		obj = self.createMock()
+		obj.system.addUser("nonadmin","nonadmin")
+		obj.system.addUser("nonadmin2","nonadmin2")
+		self.assertEqual(False,obj.canUpdateUserProfile("nonadmin","nonadmin2"))
+
+	def testAdminCanChangeSomeoneElsesProfile(self):
+		obj = self.createMock()
+		obj.system.addUser("admin2","admin2")
+		obj.system.grantAdmin("admin2")
+		obj.system.addUser("nonadmin","nonadmin")
+		self.assertEqual(True,obj.canUpdateUserProfile("admin2","nonadmin"))
+
+
+
 	def testUserCanChangeOwnKeys(self):
 		obj = self.createMock()
 		obj.system.addUser("nonadmin","nonadmin")
@@ -66,6 +88,8 @@ class TestAccessRules(unittest.TestCase):
 		obj.system.grantAdmin("admin2")
 		obj.system.addUser("nonadmin","nonadmin")
 		self.assertEqual(True,obj.canChangeUserKeys("admin2","nonadmin"))
+
+
 
 	def testUserCanExportTheirOwnKeys(self):
 		obj = self.createMock()

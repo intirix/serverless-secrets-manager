@@ -20,6 +20,9 @@ class AccessRules:
 	def canCreateUser(self,user):
 		return self.isEnabled(user) and self.isAdmin(user)
 
+	def canUpdateUserProfile(self,ruser,auser):
+		return self.isEnabled(ruser) and ( ruser==auser or self.isAdmin(ruser) )
+
 	def canChangeUserKeys(self,ruser,auser):
 		return self.isEnabled(ruser) and ( ruser==auser or self.isAdmin(ruser) )
 
