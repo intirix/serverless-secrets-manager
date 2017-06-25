@@ -114,7 +114,11 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 					self._send_response(404)
 			elif matches(self.path,["v1","users",None,"keys","public"]):
 				user = parts[4]
-				if iface.setUserPublicKey(ctx,user,post_body):
+
+				keyType = iface.getPublicKeyType(post_body)
+
+
+				if iface.setUserPublicKey(ctx,user,post_body,keyType):
 					self._sendUser(200,ctx,user)
 				else:
 					self._send_response(404)

@@ -71,9 +71,10 @@ class System:
 			return data["publicKey"]
 		return None
 
-	def setUserPublicKey(self,username,pem):
+	def setUserPublicKey(self,username,pem,keyType):
 		self.log.info("Changing the public key for "+username)
 		self.db.updateUserField(username,"publicKey",pem)
+		self.db.updateUserField(username,"keyType",keyType)
 		self.db.sync()
 		return True
 
@@ -87,7 +88,7 @@ class System:
 		self.log.info("Generating keys for "+username)
 		key = self.crypto.keyStretchPassword(username,password)
 		(priv,pub) = self.crypto.generatePublicPrivateKeys()
-		self.setUserPublicKey(username,pub)
+		self.setUserPublicKey(username,pub,"RSA")
 
 		encryptedPriv = self.crypto.encrypt(key,priv)
 		self.setUserPrivateKey(username,encryptedPriv)

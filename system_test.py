@@ -22,7 +22,7 @@ class TestSystem(unittest.TestCase):
 	def testSetPublicKey(self):
 		obj = self.createMockSystem()
 		obj.addUser("user1","Lisa")
-		obj.setUserPublicKey("user1", "my_public_key")
+		obj.setUserPublicKey("user1", "my_public_key", "invalid")
 		self.assertEqual("my_public_key",obj.db.getUser("user1")["publicKey"])
 
 	def testGenerateKeysForUser(self):

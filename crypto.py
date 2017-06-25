@@ -66,6 +66,13 @@ class Crypto:
 		signature = rsapriv.sign(h, rng)
 		return signature
 
+	def getPublicKeyType(self,pub):
+		try:
+			RSA.importKey(pub)
+			return "RSA"
+		except:
+			return "unknown"
+
 	def verify(self,pub,message,signature):
 		rsapub = RSA.importKey(pub)
 		h = SHA256.new(message).digest()

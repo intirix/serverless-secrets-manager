@@ -77,6 +77,9 @@ class Server:
 		self.system.generateKeysForUser(user,password)
 		return self.system.getUser(user)["publicKey"]
 
+	def getPublicKeyType(self,pub):
+		return self.crypto.getPublicKeyType(pub)
+
 	def getUserEncryptedPrivateKey(self,ctx,user):
 		if not self.rules.canUserExportPrivateKey(ctx.user,user):
 			raise AccessDeniedException()
@@ -93,10 +96,10 @@ class Server:
 			return data["publicKey"]
 		return None
 
-	def setUserPublicKey(self,ctx,user,pem):
+	def setUserPublicKey(self,ctx,user,pem,keyType):
 		if not self.rules.canChangeUserKeys(ctx.user,user):
 			raise AccessDeniedException()
-		return self.system.setUserPublicKey(user,pem)
+		return self.system.setUserPublicKey(user,pem,keyType)
 
 	def setUserEncryptedPrivateKey(self,ctx,user,data):
 		if not self.rules.canChangeUserKeys(ctx.user,user):
