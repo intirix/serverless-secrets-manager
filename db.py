@@ -16,10 +16,13 @@ class DBInterface:
 
 class DynamoDB(DBInterface):
 	def __init__(self,usersTable,secretsTable):
+		self.log = logging.getLogger("DynamoDB")
 		self.usersTable = usersTable
 		self.secretsTable = secretsTable
-		self.client = boto3.client('dynamodb')
-		self.log = logging.getLogger("DynamoDB")
+
+		# For unit testing
+		if self.usersTable!=None:
+			self.client = boto3.client('dynamodb')
 
 	def sync(self):
 		return
@@ -39,11 +42,64 @@ class DynamoDB(DBInterface):
 				if key in item and "S" in item[key]:
 					data[key] = item[key]["S"]
 		except:
-			self.log.exception("Could not parse entry for "+username)
+			if username==None:
+				self.log.exception("Could not parse user entry for unknown user")
+			else:
+				self.log.exception("Could not parse user entry for "+username)
 
 		# only add the data if we parse the required fields
 		if data != None and "displayName" in data:
 			return (username,data)
+		return (None,None)
+
+	def _processSecret(self,item):
+		data = None
+		sid = "unknown"
+
+		requiredFields = []
+		requiredFields.append("hmac")
+		requiredFields.append("hmacKey")
+		requiredFields.append("encryptedSecret")
+		requiredFields.append("secretEncryptionProfile")
+
+		try:
+			sid = item["sid"]["S"]
+
+			data = {"users":{}}
+			for key in requiredFields:
+				if not key in item:
+					raise(Exception("Secret "+sid+" is missing "+key))
+				elif not "S" in item[key]:
+					raise(Exception("Secret "+sid+" had the wrong datatype for "+key))
+				else:
+					data[key] = item[key]["S"]
+
+			if "users" in item:
+				for user in item["users"]["M"].keys():
+					uitem = item["users"]["M"][user]["M"]
+					udata = {"canWrite":"N","canShare":"N","canUnshare":"N"}
+					try:
+						for key in ["encryptedKey"]:
+							if not key in uitem:
+								raise(Exception("Secret "+sid+" is missing "+key+" for user "+user))
+							elif not "S" in uitem[key]:
+								raise(Exception("Secret "+sid+" had the wrong datatype for "+key+" for user "+user))
+							else:
+								udata[key] = uitem[key]["S"]
+
+
+						for key in ["canWrite","canShare","canUnshare"]:
+							if key in uitem and "S" in uitem[key]:
+								udata[key] = uitem[key]["S"]
+
+						data["users"][user] = udata
+					except:
+						self.log.exception("Could not parse secret entry user info for "+sid+" - "+user)
+
+			return (sid,data)
+		except:
+			self.log.exception("Could not parse secret entry for "+sid)
+
 		return (None,None)
 
 	def listUsers(self):
@@ -71,7 +127,7 @@ class DynamoDB(DBInterface):
 		item["enabled"]={"S":"Y"}
 		item["displayName"]={"S":displayName}
 		self.client.put_item(TableName=self.usersTable,Item=item)
-		return True
+		return uid
 
 	def updateUserField(self,username,fieldName,value):
 		data={fieldName:{"Value":{"S":value},"Action":"PUT"}}
@@ -82,6 +138,36 @@ class DynamoDB(DBInterface):
 		data={fieldName:{"Action":"DELETE"}}
 		resp = self.client.update_item(TableName=self.usersTable,Key={"username":{"S":username}},AttributeUpdates=data)
 		return True
+
+	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,hmacKey,encryptedSecret,hmac):
+		sid = str(uuid.uuid4())
+		item={}
+		item["sid"]={"S":sid}
+		item["secretEncryptionProfile"]={"S":str(secretEncryptionProfile)}
+		item["encryptedSecret"]={"S":encryptedSecret}
+		item["hmacKey"]={"S":hmacKey}
+		item["hmac"]={"S":hmac}
+		item["users"]={"M":{}}
+		item["users"]["M"][owner]={"M":{}}
+		item["users"]["M"][owner]["M"]["encryptedKey"]={"S":encryptedKey}
+		item["users"]["M"][owner]["M"]["canWrite"]={"S":"Y"}
+		item["users"]["M"][owner]["M"]["canShare"]={"S":"Y"}
+		item["users"]["M"][owner]["M"]["canUnshare"]={"S":"Y"}
+		self.client.put_item(TableName=self.secretsTable,Item=item)
+		return sid
+
+	def updateSecret(self,sid,encryptedSecret,hmac):
+		data={}
+		data["encryptedSecret"]={"Value":{"S":encryptedSecret},"Action":"PUT"}
+		data["hmac"]={"Value":{"S":hmac},"Action":"PUT"}
+		resp = self.client.update_item(TableName=self.secretsTable,Key={"sid":{"S":sid}},AttributeUpdates=data)
+		return True
+
+	def getSecret(self,sid):
+		resp = self.client.get_item(TableName=self.secretsTable,Key={"sid":{"S":sid}})
+		if resp != None and "Item" in resp:
+			return self._processSecret(resp["Item"])[1]
+		return None
 
 class MemoryDB(DBInterface):
 	def __init__(self):
@@ -119,7 +205,7 @@ class MemoryDB(DBInterface):
 		self.sdb[sid]["hmacKey"]=hmacKey
 		self.sdb[sid]["hmac"]=hmac
 		self.sdb[sid]["users"]={}
-		self.sdb[sid]["users"][owner]={"encryptedKey":encryptedKey,"canWrite":"Y"}
+		self.sdb[sid]["users"][owner]={"encryptedKey":encryptedKey,"canWrite":"Y","canShare":"Y","canUnshare":"Y"}
 		return sid
 
 	def updateSecret(self,sid,encryptedSecret,hmac):

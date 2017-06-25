@@ -284,7 +284,7 @@ class CLI:
 
 
 			# First decrypt
-			privKey = self.client.getUserPrivateKey(self.user,password)
+			privKey = self.getPrivateKey()
 			secretEntry = self.client.getSecret(sid)
 
 
