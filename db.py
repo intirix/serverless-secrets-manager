@@ -169,6 +169,17 @@ class DynamoDB(DBInterface):
 			return self._processSecret(resp["Item"])[1]
 		return None
 
+	def getSecretsForUser(self,user):
+		items = self.client.scan(TableName=self.secretsTable)["Items"]
+		ret = {}
+
+		for item in items:
+			(sid,data) = self._processSecret(item)
+			if data != None and "users" in data and user in data["users"]:
+				ret[sid] = data
+		return ret
+
+
 class MemoryDB(DBInterface):
 	def __init__(self):
 		self.udb = {}

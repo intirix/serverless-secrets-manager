@@ -234,7 +234,6 @@ class CLI:
 			privKey = self.getPrivateKey()
 
 			secretEntries = self.client.getSecretsForUser(self.user)
-			print(secretEntries)
 
 			secrets = {}
 
