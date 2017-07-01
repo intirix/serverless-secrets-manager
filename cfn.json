@@ -1,0 +1,96 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+
+    "Role": {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "AssumeRolePolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [ "lambda.amazonaws.com" ]
+              },
+              "Action": [ "sts:AssumeRole" ]
+            }
+          ]
+        },
+        "Path": "/"
+      }
+    },
+
+
+    "Function": {
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "Code" : {
+          "S3Bucket": "serverless-secret-manager-us-east-1",
+           "S3Key": "lambda/lambda.zip"
+        },
+        "Description" : "Serverless Secret Manager Lambda function",
+        "FunctionName" : {"Fn::Join": ["",[{"Ref":"AWS::StackName"},"-func"]]},
+        "Handler" : "lambda_functions.single_func",
+        "MemorySize" : 128,
+        "Runtime" : "python2.7",
+        "Role" : {"Fn::GetAtt" : [ "Role", "Arn" ]},
+        "Timeout" : 60
+      }
+    },
+
+    "RestApi": {
+      "Type": "AWS::ApiGateway::RestApi",
+      "Properties": {
+        "Name": "SecretManager-API"
+      }
+    },
+
+    "RestResourceV1": {
+      "Type" : "AWS::ApiGateway::Resource",
+      "Properties" : {
+        "ParentId" : { "Fn::GetAtt": ["RestApi", "RootResourceId"] },
+        "PathPart" : "v1",
+        "RestApiId" : {"Ref":"RestApi"}
+      }
+    },
+
+    "RestResourceV1Users": {
+      "Type" : "AWS::ApiGateway::Resource",
+      "Properties" : {
+        "ParentId" : {"Ref":"RestResourceV1"},
+        "PathPart" : "users",
+        "RestApiId" : {"Ref":"RestApi"}
+      }
+    },
+
+    "RestMethodGETV1Users": {
+      "Type" : "AWS::ApiGateway::Method",
+      "Properties" : {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "Type": "AWS_PROXY",
+          "IntegrationHttpMethod": "GET",
+          "Uri": {"Fn::Join": [ "", [
+              "arn:aws:apigateway:",
+              {"Ref":"AWS::Region"},
+              ":lambda:path/",
+              {"Fn::GetAtt" : [ "Function", "Arn" ]},
+              "/invocations"
+            ]]}
+        },
+        "ResourceId": {"Ref":"RestResourceV1Users"},
+        "RestApiId": {"Ref":"RestApi"}
+      }
+    }
+
+
+
+
+
+
+
+  }
+
+}
