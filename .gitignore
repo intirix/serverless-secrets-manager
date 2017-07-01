@@ -7,3 +7,4 @@ local.secrets.json
 local.users.json
 *.key
 *.pem
+*.swo

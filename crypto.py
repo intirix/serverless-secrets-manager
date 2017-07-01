@@ -16,6 +16,15 @@ import time
 class Crypto:
 
 	def keyStretchPassword(self,salt,password,buflen=32):
+		# scrypt doesn't support unicode salts and passwords
+		# I don't know if this is the proper way to handle this
+		# I think I might want to do a length check so that I fail
+		# when something funny is going on
+		if type(salt)==unicode:
+			salt=salt.encode('ascii','replace')
+		if type(password)==unicode:
+			password=password.encode('ascii','replace')
+
 		key = scrypt.hash(password=password,salt=salt,buflen=buflen)
 		return key
 

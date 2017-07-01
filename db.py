@@ -115,7 +115,7 @@ class DynamoDB(DBInterface):
 	def getUser(self,username):
 		resp = self.client.get_item(TableName=self.usersTable,Key={"username":{"S":username}})
 		if resp != None and "Item" in resp:
-			return self._processUser(resp["Item"])
+			return self._processUser(resp["Item"])[1]
 		return None
 
 	def addUser(self,username,displayName):

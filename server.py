@@ -22,6 +22,10 @@ class Server:
 		self.rules = accessrules.AccessRules(self.system)
 		self.log = logging.getLogger("server")
 
+	def mockAuthentication(self,username):
+		self.log.warn("Mocking user "+username)
+		return Context(username)
+
 	def validateAuthentication(self,username,password):
 		try:
 			if self.system.getUser(username)==None:
@@ -75,7 +79,9 @@ class Server:
 		if not self.rules.canChangeUserKeys(ctx.user,user):
 			raise AccessDeniedException()
 		self.system.generateKeysForUser(user,password)
-		return self.system.getUser(user)["publicKey"]
+		userdata = self.system.getUser(user)
+		print("userdata="+str(userdata))
+		return userdata["publicKey"]
 
 	def getPublicKeyType(self,pub):
 		return self.crypto.getPublicKeyType(pub)
@@ -123,6 +129,7 @@ class Server:
 			self.system.setUserPublicKey(user,data["publicKey"])
 		if "encryptedPrivateKey" in data:
 			self.system.setUserPrivateKey(user,data["encryptedPrivateKey"])
+		return True
 
 	def updateUser(self,ctx,user,post_body):
 		data = {}
