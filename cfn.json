@@ -23,6 +23,9 @@
 
 
     "Function": {
+      "DependsOn": [
+        "Role"
+      ],
       "Type" : "AWS::Lambda::Function",
       "Properties" : {
         "Code" : {
@@ -46,7 +49,36 @@
       }
     },
 
+    "RestDeployment": {
+      "DependsOn": [
+        "RestApi",
+        "Function",
+        "RestMethodGETV1Users"
+      ],
+      "Type": "AWS::ApiGateway::Deployment",
+      "Properties": {
+        "RestApiId" : {"Ref":"RestApi"}
+      }
+    },
+
+    "RestStage": {
+      "DependsOn": [
+        "RestDeployment"
+      ],
+      "Type": "AWS::ApiGateway::Stage",
+      "Properties": {
+        "DeploymentId": {"Ref":"RestDeployment"},
+        "RestApiId" : {"Ref":"RestApi"},
+        "StageName": "prod"
+      }
+    },
+
+
     "RestResourceV1": {
+      "DependsOn": [
+        "RestApi",
+        "Function"
+      ],
       "Type" : "AWS::ApiGateway::Resource",
       "Properties" : {
         "ParentId" : { "Fn::GetAtt": ["RestApi", "RootResourceId"] },
@@ -56,6 +88,10 @@
     },
 
     "RestResourceV1Users": {
+      "DependsOn": [
+        "RestResourceV1",
+        "Function"
+      ],
       "Type" : "AWS::ApiGateway::Resource",
       "Properties" : {
         "ParentId" : {"Ref":"RestResourceV1"},
@@ -65,6 +101,10 @@
     },
 
     "RestMethodGETV1Users": {
+      "DependsOn": [
+        "RestResourceV1Users",
+        "Function"
+      ],
       "Type" : "AWS::ApiGateway::Method",
       "Properties" : {
         "AuthorizationType": "NONE",
