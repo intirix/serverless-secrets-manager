@@ -66,6 +66,45 @@
       }
     },
 
+    "FunctionPolicy": {
+      "DependsOn": [
+        "UsersTable",
+        "SecretsTable"
+      ],
+      "Type": "AWS::IAM::ManagedPolicy",
+      "Properties": {
+        "Roles": [ {"Ref":"Role"} ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "dynamodb:Scan",
+                "dynamodb:Query",
+                "dynamodb:DeleteItem",
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem"
+              ],
+              "Resource": [
+                {"Fn::Join":["",[
+                  "arn:aws:dynamodb:",
+                  {"Ref":"AWS::Region"},
+                  ":*:table/",{"Ref":"UsersTable"}
+                ]]},
+                {"Fn::Join":["",[
+                  "arn:aws:dynamodb:",
+                  {"Ref":"AWS::Region"},
+                  ":*:table/",{"Ref":"SecretsTable"}
+                ]]}
+              ]
+            }
+          ]
+        }
+      }
+    },
+
 
     "Function": {
       "DependsOn": [
