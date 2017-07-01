@@ -7,13 +7,22 @@ import server
 import logging
 import json
 import base64
+import os
 
 class LambdaCommon:
 
 	def __init__(self):
 		self.log = logging.getLogger("Lambda")
 		self.system = system.System()
-		self.db = db.CacheDB(db.DynamoDB("secrets-users","secrets-secrets"))
+
+		userTable = "secrets-users"
+		if "USERS_TABLE" in os.environ:
+			userTable = os.environ["USERS_TABLE"]
+		secretsTable = "secrets-secrets"
+		if "SECRETS_TABLE" in os.environ:
+			secretsTable = os.environ["SECRETS_TABLE"]
+
+		self.db = db.CacheDB(db.DynamoDB(userTable,secretsTable))
 		self.system.setDB(self.db)
 		self.system.init()
 		self.client = client.Client(client.ClientSystemInterface(self.system))
@@ -67,49 +76,49 @@ def matches(event,meth,path):
 
 def single_func(event, context):
 	print(json.dumps(event,indent=2))
-	if matches(event,"GET","/users"):
+	if matches(event,"GET","/v1/users"):
 		return list_users(event, context)
 
-	if matches(event,"GET","/users/{username}"):
+	if matches(event,"GET","/v1/users/{username}"):
 		return get_user(event, context)
 
-	if matches(event,"PUT","/users/{username}"):
+	if matches(event,"PUT","/v1/users/{username}"):
 		return update_user(event, context)
 
-	if matches(event,"POST","/users/{username}"):
+	if matches(event,"POST","/v1/users/{username}"):
 		return create_user(event, context)
 
-	if matches(event,"GET","/users/{username}/keys/public"):
+	if matches(event,"GET","/v1/users/{username}/keys/public"):
 		return get_user_public_key(event, context)
 
-	if matches(event,"PUT","/users/{username}/keys/public"):
+	if matches(event,"PUT","/v1/users/{username}/keys/public"):
 		return set_user_public_key(event, context)
 
-	if matches(event,"POST","/users/{username}/keys/public"):
+	if matches(event,"POST","/v1/users/{username}/keys/public"):
 		return set_user_public_key(event, context)
 
-	if matches(event,"POST","/users/{username}/keys"):
+	if matches(event,"POST","/v1/users/{username}/keys"):
 		return generate_user_keys(event, context)
 
-	if matches(event,"GET","/users/{username}/keys/private/encrypted"):
+	if matches(event,"GET","/v1/users/{username}/keys/private/encrypted"):
 		return get_user_private_key_encrypted(event, context)
 
-	if matches(event,"PUT","/users/{username}/keys/private/encrypted"):
+	if matches(event,"PUT","/v1/users/{username}/keys/private/encrypted"):
 		return set_user_private_key_encrypted(event, context)
 
-	if matches(event,"POST","/users/{username}/keys/private/encrypted"):
+	if matches(event,"POST","/v1/users/{username}/keys/private/encrypted"):
 		return set_user_private_key_encrypted(event, context)
 
-	if matches(event,"GET","/users/{username}/secrets"):
+	if matches(event,"GET","/v1/users/{username}/secrets"):
 		return get_user_secrets(event, context)
 
-	if matches(event,"GET","/secrets/{sid}"):
+	if matches(event,"GET","/v1/secrets/{sid}"):
 		return get_secret(event, context)
 
-	if matches(event,"PUT","/secrets/{sid}"):
+	if matches(event,"PUT","/v1/secrets/{sid}"):
 		return update_secret(event, context)
 
-	if matches(event,"POST","/secrets"):
+	if matches(event,"POST","/v1/secrets"):
 		return add_secret(event, context)
 
 	return {"statusCode":404}
