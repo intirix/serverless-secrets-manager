@@ -2,6 +2,8 @@
 
 import requests
 import json
+from datetime import datetime
+import crypto
 
 class ClientSystemInterface:
 
@@ -143,4 +145,20 @@ class Client:
 
 	def updateSecret(self,sid,encryptedSecret,hmac):
 		self.iface.updateSecret(sid,encryptedSecret,hmac)
+
+class ClientHelper:
+
+	def __init__(self):
+		self.crypto = crypto.Crypto()
+
+	def generateToken(self,privKey):
+		token = datetime.utcnow().isoformat()
+		signedToken = self.crypto.sign(privKey,token)
+		authToken = json.dumps({"token":token,"signed":signedToken})
+		return authToken
+
+	def decryptPrivateKey(self,user,encryptedPrivateKey,password):
+		aesKey = self.crypto.keyStretchPassword(user,password)
+		return self.crypto.decrypt(aesKey,encryptedPrivateKey)
+
 

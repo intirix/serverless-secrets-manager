@@ -16,6 +16,7 @@ class CLI:
 	def __init__(self,args):
 		self.args = args
 		self.crypto = crypto.Crypto()
+		self.helper = client.ClientHelper()
 
 	def help(self):
 		print(sys.argv[0]+" <flags> <command> <arguments>")
@@ -130,9 +131,7 @@ class CLI:
 			# direct access doesn't require a password
 			self.client.login(self.user,"")
 		else:
-			token = datetime.utcnow().isoformat()
-			signedToken = self.crypto.sign(self.getPrivateKey(),token)
-			authToken = json.dumps({"token":token,"signed":signedToken})
+			authToken = self.helper.generateToken(self.getPrivateKey())
 			self.client.login(self.user,authToken)
 
 	def getPassword(self):
@@ -147,8 +146,7 @@ class CLI:
 				encryptedPrivateKey = f.read()
 				f.close()
 
-				aesKey = self.crypto.keyStretchPassword(self.user,self.getPassword())
-				self.privateKey = self.crypto.decrypt(aesKey,encryptedPrivateKey)
+				self.privateKey = self.helper.decryptPrivateKey(self.user,encryptedPrivateKey,self.getPassword())
 			else:
 				self.privateKey = self.client.getUserPrivateKey(self.user,self.getPassword())
 		return self.privateKey
