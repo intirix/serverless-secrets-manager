@@ -121,6 +121,7 @@ def single_func(event, context):
 	if matches(event,"POST","/v1/secrets"):
 		return add_secret(event, context)
 
+	print("Did not match the event")
 	return {"statusCode":404}
 
 def list_users(event, context):
