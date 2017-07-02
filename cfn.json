@@ -168,7 +168,8 @@
       "DependsOn": [
         "RestApi",
         "Function",
-        "RestMethodGETV1Users"
+        "RestMethodGETV1Users",
+        "RestMethodANYV1UsersUsername"
       ],
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
@@ -251,9 +252,158 @@
         "ResourceId": {"Ref":"RestResourceV1Users"},
         "RestApiId": {"Ref":"RestApi"}
       }
+    },
+
+
+
+
+    "RestResourceV1UsersUsername": {
+      "DependsOn": [
+        "RestResourceV1Users",
+        "Function"
+      ],
+      "Type" : "AWS::ApiGateway::Resource",
+      "Properties" : {
+        "ParentId" : {"Ref":"RestResourceV1Users"},
+        "PathPart" : "{username}",
+        "RestApiId" : {"Ref":"RestApi"}
+      }
+    },
+    "RestMethodANYV1UsersUsername": {
+      "DependsOn": [
+        "RestResourceV1UsersUsername",
+        "LambdaPermission"
+      ],
+      "Type" : "AWS::ApiGateway::Method",
+      "Properties" : {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "ANY",
+        "Integration": {
+          "Type": "AWS_PROXY",
+          "IntegrationHttpMethod": "POST",
+          "Uri": {"Fn::Join": [ "", [
+              "arn:aws:apigateway:",
+              {"Ref":"AWS::Region"},
+              ":lambda:path/2015-03-31/functions/",
+              {"Fn::GetAtt" : [ "Function", "Arn" ]},
+              "/invocations"
+            ]]}
+        },
+        "MethodResponses": [
+          {
+            "StatusCode": "200"
+          },
+          {
+            "StatusCode": "201"
+          }
+        ],
+        "ResourceId": {"Ref":"RestResourceV1UsersUsername"},
+        "RestApiId": {"Ref":"RestApi"}
+      }
+    },
+
+
+    "RestResourceV1UsersUsernameKeys": {
+      "DependsOn": [
+        "RestResourceV1UsersUsername",
+        "Function"
+      ],
+      "Type" : "AWS::ApiGateway::Resource",
+      "Properties" : {
+        "ParentId" : {"Ref":"RestResourceV1UsersUsername"},
+        "PathPart" : "keys",
+        "RestApiId" : {"Ref":"RestApi"}
+      }
+    },
+
+
+
+    "RestResourceV1UsersUsernameKeysPublic": {
+      "DependsOn": [
+        "RestResourceV1UsersUsernameKeys",
+        "Function"
+      ],
+      "Type" : "AWS::ApiGateway::Resource",
+      "Properties" : {
+        "ParentId" : {"Ref":"RestResourceV1UsersUsernameKeys"},
+        "PathPart" : "public",
+        "RestApiId" : {"Ref":"RestApi"}
+      }
+    },
+
+
+
+    "RestResourceV1UsersUsernameKeysPrivate": {
+      "DependsOn": [
+        "RestResourceV1UsersUsernameKeys",
+        "Function"
+      ],
+      "Type" : "AWS::ApiGateway::Resource",
+      "Properties" : {
+        "ParentId" : {"Ref":"RestResourceV1UsersUsernameKeys"},
+        "PathPart" : "private",
+        "RestApiId" : {"Ref":"RestApi"}
+      }
+    },
+
+
+    "RestResourceV1UsersUsernameKeysPrivateEncrypted": {
+      "DependsOn": [
+        "RestResourceV1UsersUsernameKeysPrivate",
+        "Function"
+      ],
+      "Type" : "AWS::ApiGateway::Resource",
+      "Properties" : {
+        "ParentId" : {"Ref":"RestResourceV1UsersUsernameKeysPrivate"},
+        "PathPart" : "encrypted",
+        "RestApiId" : {"Ref":"RestApi"}
+      }
+    },
+
+
+    "RestResourceV1UsersUsernameSecrets": {
+      "DependsOn": [
+        "RestResourceV1UsersUsername",
+        "Function"
+      ],
+      "Type" : "AWS::ApiGateway::Resource",
+      "Properties" : {
+        "ParentId" : {"Ref":"RestResourceV1UsersUsername"},
+        "PathPart" : "secrets",
+        "RestApiId" : {"Ref":"RestApi"}
+      }
+    },
+
+
+
+
+    "RestResourceV1Secrets": {
+      "DependsOn": [
+        "RestResourceV1",
+        "Function"
+      ],
+      "Type" : "AWS::ApiGateway::Resource",
+      "Properties" : {
+        "ParentId" : {"Ref":"RestResourceV1"},
+        "PathPart" : "secrets",
+        "RestApiId" : {"Ref":"RestApi"}
+      }
+    },
+
+
+
+    "RestResourceV1SecretsSid": {
+      "DependsOn": [
+        "RestResourceV1Secrets",
+        "Function"
+      ],
+      "Type" : "AWS::ApiGateway::Resource",
+      "Properties" : {
+        "ParentId" : {"Ref":"RestResourceV1Secrets"},
+        "PathPart" : "{sid}",
+        "RestApiId" : {"Ref":"RestApi"}
+      }
     }
-
-
 
 
 
