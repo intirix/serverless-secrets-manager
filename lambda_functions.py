@@ -29,7 +29,10 @@ class LambdaCommon:
 		self.server = server.Server(self.system)
 		self.resp = None
 		self.ctx = None
-		self.mockUser = "admin"
+		self.mockUser = None
+
+		if "MOCK_USER" in os.environ and len(os.environ["MOCK_USER"])>0:
+			self.mockUser = os.environ["MOCK_USER"]
 
 	def _response401(self):
 		self.resp = {"statusCode":401}
