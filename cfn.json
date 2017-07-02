@@ -168,8 +168,14 @@
       "DependsOn": [
         "RestApi",
         "Function",
+        "RestMethodANYV1SecretsSid",
+        "RestMethodANYV1UsersUsername",
+        "RestMethodANYV1UsersUsernameKeysPrivateEncrypted",
+        "RestMethodANYV1UsersUsernameKeysPublic",
         "RestMethodGETV1Users",
-        "RestMethodANYV1UsersUsername"
+        "RestMethodGETV1UsersUsernameSecrets",
+        "RestMethodPOSTV1Secrets",
+        "RestMethodPOSTV1UsersUsernameKeys"
       ],
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
@@ -315,6 +321,36 @@
         "RestApiId" : {"Ref":"RestApi"}
       }
     },
+    "RestMethodPOSTV1UsersUsernameKeys": {
+      "DependsOn": [
+        "RestResourceV1UsersUsernameKeys",
+        "LambdaPermission"
+      ],
+      "Type" : "AWS::ApiGateway::Method",
+      "Properties" : {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "Integration": {
+          "Type": "AWS_PROXY",
+          "IntegrationHttpMethod": "POST",
+          "Uri": {"Fn::Join": [ "", [
+              "arn:aws:apigateway:",
+              {"Ref":"AWS::Region"},
+              ":lambda:path/2015-03-31/functions/",
+              {"Fn::GetAtt" : [ "Function", "Arn" ]},
+              "/invocations"
+            ]]}
+        },
+        "MethodResponses": [
+          {
+            "StatusCode": "200"
+          }
+        ],
+        "ResourceId": {"Ref":"RestResourceV1UsersUsernameKeys"},
+        "RestApiId": {"Ref":"RestApi"}
+      }
+    },
+
 
 
 
@@ -328,6 +364,38 @@
         "ParentId" : {"Ref":"RestResourceV1UsersUsernameKeys"},
         "PathPart" : "public",
         "RestApiId" : {"Ref":"RestApi"}
+      }
+    },
+    "RestMethodANYV1UsersUsernameKeysPublic": {
+      "DependsOn": [
+        "RestResourceV1UsersUsernameKeysPublic",
+        "LambdaPermission"
+      ],
+      "Type" : "AWS::ApiGateway::Method",
+      "Properties" : {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "ANY",
+        "Integration": {
+          "Type": "AWS_PROXY",
+          "IntegrationHttpMethod": "POST",
+          "Uri": {"Fn::Join": [ "", [
+              "arn:aws:apigateway:",
+              {"Ref":"AWS::Region"},
+              ":lambda:path/2015-03-31/functions/",
+              {"Fn::GetAtt" : [ "Function", "Arn" ]},
+              "/invocations"
+            ]]}
+        },
+        "MethodResponses": [
+          {
+            "StatusCode": "200"
+          },
+          {
+            "StatusCode": "201"
+          }
+        ],
+        "ResourceId": {"Ref":"RestResourceV1UsersUsernameKeysPublic"},
+        "RestApiId": {"Ref":"RestApi"}
       }
     },
 
@@ -359,6 +427,39 @@
         "RestApiId" : {"Ref":"RestApi"}
       }
     },
+    "RestMethodANYV1UsersUsernameKeysPrivateEncrypted": {
+      "DependsOn": [
+        "RestResourceV1UsersUsernameKeysPrivateEncrypted",
+        "LambdaPermission"
+      ],
+      "Type" : "AWS::ApiGateway::Method",
+      "Properties" : {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "ANY",
+        "Integration": {
+          "Type": "AWS_PROXY",
+          "IntegrationHttpMethod": "POST",
+          "Uri": {"Fn::Join": [ "", [
+              "arn:aws:apigateway:",
+              {"Ref":"AWS::Region"},
+              ":lambda:path/2015-03-31/functions/",
+              {"Fn::GetAtt" : [ "Function", "Arn" ]},
+              "/invocations"
+            ]]}
+        },
+        "MethodResponses": [
+          {
+            "StatusCode": "200"
+          },
+          {
+            "StatusCode": "201"
+          }
+        ],
+        "ResourceId": {"Ref":"RestResourceV1UsersUsernameKeysPrivateEncrypted"},
+        "RestApiId": {"Ref":"RestApi"}
+      }
+    },
+
 
 
     "RestResourceV1UsersUsernameSecrets": {
@@ -373,6 +474,36 @@
         "RestApiId" : {"Ref":"RestApi"}
       }
     },
+    "RestMethodGETV1UsersUsernameSecrets": {
+      "DependsOn": [
+        "RestResourceV1UsersUsername",
+        "LambdaPermission"
+      ],
+      "Type" : "AWS::ApiGateway::Method",
+      "Properties" : {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "Type": "AWS_PROXY",
+          "IntegrationHttpMethod": "POST",
+          "Uri": {"Fn::Join": [ "", [
+              "arn:aws:apigateway:",
+              {"Ref":"AWS::Region"},
+              ":lambda:path/2015-03-31/functions/",
+              {"Fn::GetAtt" : [ "Function", "Arn" ]},
+              "/invocations"
+            ]]}
+        },
+        "MethodResponses": [
+          {
+            "StatusCode": "200"
+          }
+        ],
+        "ResourceId": {"Ref":"RestResourceV1UsersUsernameSecrets"},
+        "RestApiId": {"Ref":"RestApi"}
+      }
+    },
+
 
 
 
@@ -389,6 +520,37 @@
         "RestApiId" : {"Ref":"RestApi"}
       }
     },
+    "RestMethodPOSTV1Secrets": {
+      "DependsOn": [
+        "RestResourceV1Secrets",
+        "LambdaPermission"
+      ],
+      "Type" : "AWS::ApiGateway::Method",
+      "Properties" : {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "Integration": {
+          "Type": "AWS_PROXY",
+          "IntegrationHttpMethod": "POST",
+          "Uri": {"Fn::Join": [ "", [
+              "arn:aws:apigateway:",
+              {"Ref":"AWS::Region"},
+              ":lambda:path/2015-03-31/functions/",
+              {"Fn::GetAtt" : [ "Function", "Arn" ]},
+              "/invocations"
+            ]]}
+        },
+        "MethodResponses": [
+          {
+            "StatusCode": "201"
+          }
+        ],
+        "ResourceId": {"Ref":"RestResourceV1Secrets"},
+        "RestApiId": {"Ref":"RestApi"}
+      }
+    },
+
+
 
 
 
@@ -403,7 +565,40 @@
         "PathPart" : "{sid}",
         "RestApiId" : {"Ref":"RestApi"}
       }
+    },
+    "RestMethodANYV1SecretsSid": {
+      "DependsOn": [
+        "RestResourceV1SecretsSid",
+        "LambdaPermission"
+      ],
+      "Type" : "AWS::ApiGateway::Method",
+      "Properties" : {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "Type": "AWS_PROXY",
+          "IntegrationHttpMethod": "POST",
+          "Uri": {"Fn::Join": [ "", [
+              "arn:aws:apigateway:",
+              {"Ref":"AWS::Region"},
+              ":lambda:path/2015-03-31/functions/",
+              {"Fn::GetAtt" : [ "Function", "Arn" ]},
+              "/invocations"
+            ]]}
+        },
+        "MethodResponses": [
+          {
+            "StatusCode": "200"
+          },
+          {
+            "StatusCode": "201"
+          }
+        ],
+        "ResourceId": {"Ref":"RestResourceV1SecretsSid"},
+        "RestApiId": {"Ref":"RestApi"}
+      }
     }
+
 
 
 
