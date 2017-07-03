@@ -38,7 +38,7 @@ class DynamoDB(DBInterface):
 			data["enabled"] = "N"
 			data["displayName"] = item["displayName"]["S"]
 
-			for key in [ "publicKey", "keyType", "encryptedPrivateKey", "admin", "enabled" ]:
+			for key in [ "publicKey", "keyType", "encryptedPrivateKey", "admin", "enabled", "passwordAuth" ]:
 				if key in item and "S" in item[key]:
 					data[key] = item[key]["S"]
 		except:
@@ -212,6 +212,7 @@ class MemoryDB(DBInterface):
 	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,hmacKey,encryptedSecret,hmac):
 		sid = str(uuid.uuid4())
 		self.sdb[sid]={}
+		self.sdb[sid]["sid"]=sid
 		self.sdb[sid]["secretEncryptionProfile"]=secretEncryptionProfile
 		self.sdb[sid]["encryptedSecret"]=encryptedSecret
 		self.sdb[sid]["hmacKey"]=hmacKey

@@ -1,0 +1,372 @@
+swagger: "2.0"
+info:
+  description: "API to access the Secrets Manager"
+  version: "1.0.0"
+  title: "Secrets Manager"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "secretsmanager.example.com"
+basePath: "/v1"
+schemes:
+- "http"
+- "https"
+paths:
+  /users:
+    get:
+      summary: "List all the users"
+      description: ""
+      operationId: "listUsers"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#definitions/User"
+  /users/{username}:
+    get:
+      summary: "Get info about a user"
+      description: ""
+      operationId: "getUser"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#definitions/User"
+        404:
+          description: "User not found"
+    post:
+      summary: "Adds a user"
+      description: ""
+      operationId: "addUser"
+      consumes:
+      - "application/json"
+      products:
+      - "application/json"
+      parameters:
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: "string"
+      - in: body
+        name: user
+        required: true
+        description: "The user that is getting added"
+        schema:
+          $ref: "#definitions/User"
+      responses:
+        201:
+          description: "successful operation"
+          schema:
+            $ref: "#definitions/User"
+        403:
+          description: "Not authorized"
+    put:
+      summary: "Updates a user"
+      description: ""
+      operationId: "updateUser"
+      consumes:
+      - "application/json"
+      products:
+      - "application/json"
+      parameters:
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: "string"
+      - in: body
+        name: user
+        required: true
+        description: "The user that is getting updated"
+        schema:
+          $ref: "#definitions/User"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#definitions/User"
+        403:
+          description: "Not authorized"
+        404:
+          description: "User not found"
+
+  /users/{username}/keys/public:
+    get:
+      summary: "Get a user's public key"
+      description: ""
+      operationId: "getUserPublicKey"
+      produces:
+      - "application/x-pem-file"
+      parameters:
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            type: "string"
+    put:
+      summary: "Set a user's public key"
+      description: ""
+      operationId: "setUserPublicKey"
+      consumes:
+      - "application/x-pem-file"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: "string"
+      - in: body
+        name: key
+        required: true
+        schema:
+          type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#definitions/User"
+  /users/{username}/keys/private/encrypted:
+    get:
+      summary: "Get a user's encrypted private key"
+      description: ""
+      operationId: "getUserEncryptedPrivateKey"
+      produces:
+      - "application/octet-stream"
+      parameters:
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            type: "string"
+    put:
+      summary: "Set a user's encrypted private key"
+      description: ""
+      operationId: "setUserEncryptedPrivateKey"
+      consumes:
+      - "application/octet-stream"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: "string"
+      - in: body
+        name: key
+        required: true
+        schema:
+          type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#definitions/User"
+  /users/{username}/keys?generate={generate}:
+    post:
+      summary: "Generate a new keypair for a user"
+      description: ""
+      operationId: "generateKeyPair"
+      consumes:
+      - "text/plain"
+      produces:
+      - "application/octet-stream"
+      parameters:
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: "string"
+      - in: body
+        name: password
+        required: true
+        schema:
+          type: "string"
+      - in: query
+        name: generate
+        required: true
+        enum:
+        - "true"
+        - "false"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            type: "string"
+  /users/{username}/secrets:
+    get:
+      summary: "Get all of a user's encrypted secrets"
+      description: ""
+      operationId: "getUserSecrets"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#definitions/Secret"
+
+  /secrets:
+    post:
+      summary: "Create a new secret"
+      description: ""
+      operationId: "addSecret"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: body
+        name: secret
+        required: true
+        schema:
+          $ref: "#definitions/Secret"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#definitions/Secret"
+  /secrets/{sid}:
+    get:
+      summary: "Get a secret"
+      description: ""
+      operationId: "getSecret"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        name: sid
+        required: true
+        schema:
+          type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#definitions/Secret"
+    put:
+      summary: "Update a secret"
+      description: ""
+      operationId: "updateSecret"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        name: sid
+        required: true
+        schema:
+          type: "string"
+      - in: body
+        name: secret
+        required: true
+        schema:
+          $ref: "#definitions/Secret"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#definitions/Secret"
+
+
+
+definitions:
+  User:
+    type: "object"
+    properties:
+      username:
+        type: "string"
+        description: "Username"
+      id:
+        type: "string"
+        description": "Unique ID"
+      admin:
+        type: "string"
+        description: "Is the user an admin"
+        enum:
+        - "Y"
+        - "N"
+      enabled:
+        type: "string"
+        description: "Is the user enabled"
+        enum:
+        - "Y"
+        - "N"
+      passwordAuth:
+        type: "string"
+        decription: "Can the user log in with a password"
+        enum:
+        - "Y"
+        - "N"
+      displayName:
+        type: "string"
+        description: "What get's displayed as the user's name"
+  SecretUserData:
+    type: "object"
+    properties:
+      canWrite:
+        type: "string"
+        description: "Can the user write to the secret"
+        enum:
+        - "Y"
+        - "N"
+      encryptedKey:
+        type: "string"
+        description: "The key that can decrypted the secret, encrypted by the user's private key"
+  Secret:
+    type: "object"
+    properties:
+      sid:
+        type: "string"
+        description: "Unique Secret ID"
+      hmac:
+        type: "string"
+        description: "keyed-hash message authentication code for the secret"
+      hmacKey:
+        type: "string"
+        description: "key used to generate the HMAC"
+      encryptedSecret:
+        type: "string"
+        description: "The encrypted secret"
+      secretEncryptionProfile:
+        type: "string"
+        description: "Encryption profile for the secret"
+      users:
+        type: "object"
+        additionalProperties:
+          schema:
+            $ref: "#definitions/SecretUserData"

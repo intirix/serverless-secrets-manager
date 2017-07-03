@@ -13,3 +13,7 @@ aws --region=us-east-1 cloudformation update-stack --stack-name SecretManagerAPI
 Delete the stack
 
 aws --region=us-east-1 cloudformation delete-stack --stack-name SecretManagerAPI && aws --region=us-east-1 cloudformation wait stack-delete-complete --stack-name SecretManagerAPI
+
+
+
+sudo docker run --rm -v ${PWD}:/local swaggerapi/swagger-codegen-cli generate -i /local/swagger.yaml -l android --api-package com.intirix.secretsmanager.clientv1.api --model-package com.intirix.secretsmanager.clientv1.model -o /local/out/android
