@@ -22,8 +22,6 @@ class TestServer(unittest.TestCase):
 		dpriv = client.ClientHelper().decryptPrivateKey("admin",epriv,"password")
 		f.close()
 
-		print(epriv)
-
 		obj.addUser("admin","admin")
 		obj.grantAdmin("admin")
 		obj.setUserPublicKey("admin",pub,"RSA")
@@ -38,8 +36,16 @@ class TestServer(unittest.TestCase):
 		authToken = client.ClientHelper().generateToken(priv)
 		self.assertEqual("admin",srv.validateAuthentication("admin",authToken).user)
 
-	def testPasswordBasedAuth(self):
+	def testPasswordBasedAuthWhenDisabled(self):
 		(mysys,pub,priv) = self.createMockSystem()
+		srv = server.Server(mysys)
+
+		self.assertEqual(None,srv.validateAuthentication("admin","password"))
+
+
+	def testPasswordBasedAuthWhenEnabled(self):
+		(mysys,pub,priv) = self.createMockSystem()
+		mysys.enablePasswordAuth("admin")
 		srv = server.Server(mysys)
 
 		self.assertEqual("admin",srv.validateAuthentication("admin","password").user)

@@ -64,6 +64,17 @@ class System:
 		self.db.sync()
 		return True
 
+	def enablePasswordAuth(self,username):
+		self.log.info("Enabling password auth for user "+username)
+		self.db.updateUserField(username,"passwordAuth","Y")
+		self.db.sync()
+		return True
+
+	def disablePasswordAuth(self,username):
+		self.log.info("Disabling password auth for user "+username)
+		self.db.updateUserField(username,"passwordAuth","N")
+		self.db.sync()
+		return True
 
 	def getUserPublicKey(self,username):
 		data = self.getUser(username)

@@ -125,6 +125,7 @@ class DynamoDB(DBInterface):
 		item["id"]={"S":uid}
 		item["admin"]={"S":"N"}
 		item["enabled"]={"S":"Y"}
+		item["passwordAuth"]={"S":"N"}
 		item["displayName"]={"S":displayName}
 		self.client.put_item(TableName=self.usersTable,Item=item)
 		return uid
@@ -194,7 +195,7 @@ class MemoryDB(DBInterface):
 
 	def addUser(self,username,displayName):
 		uid = str(uuid.uuid4())
-		self.udb[username]={"id":uid,"displayName":displayName,"admin":"N","enabled":"Y"}
+		self.udb[username]={"id":uid,"displayName":displayName,"admin":"N","enabled":"Y","passwordAuth":"N"}
 		return uid
 
 	def getUser(self,username):
