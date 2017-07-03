@@ -31,6 +31,18 @@ class Server:
 			if self.system.getUser(username)==None:
 				self.log.warn("Unknown user: "+username)
 			elif self.rules.isEnabled(username):
+				userdata = self.system.getUser(username)
+
+				if self.rules.canAuthenticateWithPassword(username):
+					try:
+						privKey = self.system.getUserPrivateKey(username,password)
+						if privKey!=None:
+							return Context(username)
+					except:
+						# ignore and move on to the next auth type
+						pass
+
+
 				data = json.loads(password)
 				token = data["token"]
 				signedToken = data["signed"]

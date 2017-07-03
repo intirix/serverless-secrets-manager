@@ -4,6 +4,7 @@ import system
 import json
 import server
 import client
+import logging
 
 class TestServer(unittest.TestCase):
 
@@ -17,26 +18,36 @@ class TestServer(unittest.TestCase):
 		f.close()
 
 		f = open("mock_key.key")
-		priv = f.read()
-		priv = client.ClientHelper().decryptPrivateKey("admin",priv,"password")
+		epriv = f.read()
+		dpriv = client.ClientHelper().decryptPrivateKey("admin",epriv,"password")
 		f.close()
+
+		print(epriv)
 
 		obj.addUser("admin","admin")
 		obj.grantAdmin("admin")
 		obj.setUserPublicKey("admin",pub,"RSA")
-		obj.setUserPrivateKey("admin",priv)
+		obj.setUserPrivateKey("admin",epriv)
 
-		return (obj,pub,priv)
+		return (obj,pub,dpriv)
 
 	def testKeyBasedAuth(self):
 		(mysys,pub,priv) = self.createMockSystem()
 		srv = server.Server(mysys)
 
 		authToken = client.ClientHelper().generateToken(priv)
-		srv.validateAuthentication("admin",authToken)
+		self.assertEqual("admin",srv.validateAuthentication("admin",authToken).user)
+
+	def testPasswordBasedAuth(self):
+		(mysys,pub,priv) = self.createMockSystem()
+		srv = server.Server(mysys)
+
+		self.assertEqual("admin",srv.validateAuthentication("admin","password").user)
 
 
 if __name__ == '__main__':
+	FORMAT = "%(asctime)-15s %(message)s"
+        logging.basicConfig(format=FORMAT)
 	unittest.main()
 
 

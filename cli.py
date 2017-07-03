@@ -131,8 +131,11 @@ class CLI:
 			# direct access doesn't require a password
 			self.client.login(self.user,"")
 		else:
-			authToken = self.helper.generateToken(self.getPrivateKey())
-			self.client.login(self.user,authToken)
+			if self.privateKeyFile==None:
+				self.client.login(self.user,self.getPassword())
+			else:
+				authToken = self.helper.generateToken(self.getPrivateKey())
+				self.client.login(self.user,authToken)
 
 	def getPassword(self):
 		if self.password == None:

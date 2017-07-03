@@ -14,6 +14,9 @@ class AccessRules:
 		data = self.system.getUser(user)
 		return data!=None and data["admin"]=="Y"
 
+	def canAuthenticateWithPassword(self,user):
+		return True
+
 	def canGrantAdmin(self,user):
 		return self.isEnabled(user) and self.isAdmin(user)
 
