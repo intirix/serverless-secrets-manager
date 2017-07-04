@@ -25,7 +25,7 @@ paths:
           schema:
             type: "array"
             items:
-              $ref: "#definitions/User"
+              $ref: "#/definitions/User"
   /users/{username}:
     get:
       summary: "Get info about a user"
@@ -43,7 +43,7 @@ paths:
         200:
           description: "successful operation"
           schema:
-            $ref: "#definitions/User"
+            $ref: "#/definitions/User"
         404:
           description: "User not found"
     post:
@@ -65,12 +65,12 @@ paths:
         required: true
         description: "The user that is getting added"
         schema:
-          $ref: "#definitions/User"
+          $ref: "#/definitions/User"
       responses:
         201:
           description: "successful operation"
           schema:
-            $ref: "#definitions/User"
+            $ref: "#/definitions/User"
         403:
           description: "Not authorized"
     put:
@@ -92,12 +92,12 @@ paths:
         required: true
         description: "The user that is getting updated"
         schema:
-          $ref: "#definitions/User"
+          $ref: "#/definitions/User"
       responses:
         200:
           description: "successful operation"
           schema:
-            $ref: "#definitions/User"
+            $ref: "#/definitions/User"
         403:
           description: "Not authorized"
         404:
@@ -144,7 +144,7 @@ paths:
         200:
           description: "successful operation"
           schema:
-            $ref: "#definitions/User"
+            $ref: "#/definitions/User"
   /users/{username}/keys/private/encrypted:
     get:
       summary: "Get a user's encrypted private key"
@@ -186,7 +186,7 @@ paths:
         200:
           description: "successful operation"
           schema:
-            $ref: "#definitions/User"
+            $ref: "#/definitions/User"
   /users/{username}/keys?generate={generate}:
     post:
       summary: "Generate a new keypair for a user"
@@ -237,7 +237,7 @@ paths:
           schema:
             type: "array"
             items:
-              $ref: "#definitions/Secret"
+              $ref: "#/definitions/Secret"
 
   /secrets:
     post:
@@ -253,12 +253,12 @@ paths:
         name: secret
         required: true
         schema:
-          $ref: "#definitions/Secret"
+          $ref: "#/definitions/Secret"
       responses:
         200:
           description: "successful operation"
           schema:
-            $ref: "#definitions/Secret"
+            $ref: "#/definitions/Secret"
   /secrets/{sid}:
     get:
       summary: "Get a secret"
@@ -276,7 +276,7 @@ paths:
         200:
           description: "successful operation"
           schema:
-            $ref: "#definitions/Secret"
+            $ref: "#/definitions/Secret"
     put:
       summary: "Update a secret"
       description: ""
@@ -295,12 +295,12 @@ paths:
         name: secret
         required: true
         schema:
-          $ref: "#definitions/Secret"
+          $ref: "#/definitions/Secret"
       responses:
         200:
           description: "successful operation"
           schema:
-            $ref: "#definitions/Secret"
+            $ref: "#/definitions/Secret"
 
 
 
@@ -369,4 +369,4 @@ definitions:
         type: "object"
         additionalProperties:
           schema:
-            $ref: "#definitions/SecretUserData"
+            $ref: "#/definitions/SecretUserData"
