@@ -8,3 +8,5 @@ local.users.json
 *.pem
 my.key
 *.swo
+gen
+.coverage
