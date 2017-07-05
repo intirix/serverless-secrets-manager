@@ -124,6 +124,27 @@ class TestAccessRules(unittest.TestCase):
 		obj.system.disableUser("nonadmin")
 		self.assertEqual(False,obj.canUserExportPrivateKey("nonadmin","nonadmin"))
 
+	def testUserCanSeeTheirOwnAttributes(self):
+		obj = self.createMock()
+		obj.system.addUser("admin","admin")
+		obj.system.grantAdmin("admin")
+		obj.system.addUser("nonadmin","nonadmin")
+		self.assertEqual(True,obj.canUserSeeAttributes("nonadmin","nonadmin"))
+		self.assertEqual(True,obj.canUserSeeAttributes("admin","admin"))
+
+	def testUserCannotSeeSomeoneElsesAttributes(self):
+		obj = self.createMock()
+		obj.system.addUser("nonadmin","nonadmin")
+		obj.system.addUser("nonadmin2","nonadmin2")
+		self.assertEqual(False,obj.canUserSeeAttributes("nonadmin","nonadmin2"))
+		self.assertEqual(False,obj.canUserSeeAttributes("nonadmin2","nonadmin"))
+
+	def testAdminCanSeeSomeoneElsesAttributes(self):
+		obj = self.createMock()
+		obj.system.addUser("nonadmin","nonadmin")
+		obj.system.addUser("admin","admin")
+		obj.system.grantAdmin("admin")
+		self.assertEqual(True,obj.canUserSeeAttributes("admin","nonadmin"))
 
 
 if __name__ == '__main__':

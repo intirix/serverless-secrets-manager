@@ -36,7 +36,14 @@ class AccessRules:
 	def canUserExportPrivateKey(self,ruser,auser):
 		return self.isEnabled(ruser) and ( ruser==auser or self.isAdmin(ruser) )
 
+	def canUserSeeAttributes(self,ruser,auser):
+		return self.isEnabled(ruser) and ( ruser==auser or self.isAdmin(ruser) )
 
+	def canUserEnableUser(self,ruser,auser):
+		return self.isEnabled(ruser) and self.isAdmin(ruser)
+
+	def canUserDisableUser(self,ruser,auser):
+		return self.isEnabled(ruser) and ( ruser==auser or self.isAdmin(ruser) )
 
 
 

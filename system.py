@@ -19,6 +19,7 @@ class System:
 			self.log.warn("Creating admin user with default password")
 			self.addUser("admin","admin")
 			self.grantAdmin("admin")
+			self.enablePasswordAuth("admin")
 			self.generateKeysForUser("admin","password")
 		return True
 

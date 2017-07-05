@@ -9,6 +9,7 @@ class Context:
 
 	def __init__(self,user):
 		self.user = user
+		self.admin = False
 
 class AccessDeniedException(Exception):
 	pass
@@ -22,9 +23,15 @@ class Server:
 		self.rules = accessrules.AccessRules(self.system)
 		self.log = logging.getLogger("server")
 
+	def createContext(self,username):
+		ctx = Context(username)
+		if self.rules.isAdmin(username):
+			ctx.admin = True
+		return ctx
+
 	def mockAuthentication(self,username):
 		self.log.warn("Mocking user "+username)
-		return Context(username)
+		return self.createContext(username)
 
 	def validateAuthentication(self,username,password):
 		try:
@@ -37,7 +44,7 @@ class Server:
 					try:
 						privKey = self.system.getUserPrivateKey(username,password)
 						if privKey!=None:
-							return Context(username)
+							return self.createContext(username)
 					except:
 						# ignore and move on to the next auth type
 						pass
@@ -48,7 +55,7 @@ class Server:
 				signedToken = data["signed"]
 				pub = self.system.getUserPublicKey(username)
 				if self.crypto.verify(pub,token,signedToken):
-					return Context(username)
+					return self.createContext(username)
 				else:
 					self.log.warn("Failed to verify authentication for "+username)
 			else:
@@ -66,11 +73,22 @@ class Server:
 				self.log.exception("Failed login for user: "+username)
 		return None
 
-	def _getUserData(self,obj):
+	def _getUserData(self,ctx,user,obj):
 		ret = {}
-		for key in [ "displayName", "publicKey" ]:
+		attrList=[ "displayName" ]
+		if self.rules.canUserExportPrivateKey(ctx.user,user):
+			attrList.append("encryptedPrivateKey")
+		if self.rules.canUserExportPublicKey(ctx.user,user):
+			attrList.append("publicKey")
+			attrList.append("keyType")
+		if self.rules.canUserSeeAttributes(ctx.user,user):
+			attrList.append("enabled")
+			attrList.append("passwordAuth")
+
+		for key in attrList:
 			if key in obj:
 				ret[key] = obj[key]
+
 		return ret
 
 	def listUsers(self,ctx):
@@ -78,14 +96,14 @@ class Server:
 		data = self.system.listUsers()
 
 		for user in data.keys():
-			ret[user]=self._getUserData(data[user])
+			ret[user]=self._getUserData(ctx,user,data[user])
 		return ret
 
 	def getUser(self,ctx,user):
 		data = self.system.getUser(user)
 		if data==None:
 			return None
-		return self._getUserData(data)
+		return self._getUserData(ctx,user,data)
 
 	def generateKeysForUser(self,ctx,user,password):
 		if not self.rules.canChangeUserKeys(ctx.user,user):
@@ -143,19 +161,36 @@ class Server:
 			self.system.setUserPrivateKey(user,data["encryptedPrivateKey"])
 		return True
 
+	def hasDataChanged(self,oldData,newData,key):
+		if key in oldData and key in newData:
+			return oldData[key]!=newData[key]
+		return False
+
 	def updateUser(self,ctx,user,post_body):
+		oldData = self.getUser(ctx,user)
 		data = {}
 		if len(post_body)>0:
 			data = json.loads(post_body)
 
 		if self.rules.canUpdateUserProfile(ctx.user,user):
-			if "displayName" in data:
+			if self.hasDataChanged(oldData,data,"displayName"):
 				self.system.setUserDisplayName(user,data["displayName"])
+			if self.hasDataChanged(oldData,data,"passwordAuth"):
+				if data["passwordAuth"]=="Y":
+					self.system.enablePasswordAuth(user)
+				elif data["passwordAuth"]=="N":
+					self.system.disablePasswordAuth(user)
+
+		if self.hasDataChanged(oldData,data,"enabled"):
+			if data["enabled"]=="Y" and self.rules.canUserEnableUser(ctx.user,user):
+				self.system.enableUser(user)
+			elif data["enabled"]=="N" and self.rules.canUserDisableUser(ctx.user,user):
+				self.system.disableUser(user)
 
 		if self.rules.canChangeUserKeys(ctx.user,user):
-			if "publicKey" in data:
-				self.system.setUserPublicKey(user,data["publicKey"])
-			if "encryptedPrivateKey" in data:
+			if self.hasDataChanged(oldData,data,"publicKey") and "keyType" in data:
+				self.system.setUserPublicKey(user,data["publicKey"],data["keyType"])
+			if self.hasDataChanged(oldData,data,"encryptedPrivateKey"):
 				self.system.setUserPrivateKey(user,data["encryptedPrivateKey"])
 		return True
 
