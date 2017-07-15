@@ -70,7 +70,7 @@ class ClientRestInterface:
 		r.raise_for_status()
 
 	def getUserPrivateKey(self,user,password):
-		raise(Excepion("Not implemented"))
+		raise(Exception("Not implemented"))
 
 	def canCreateUser(self,user):
 		# Delegate to the server
