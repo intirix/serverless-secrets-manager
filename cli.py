@@ -71,7 +71,12 @@ class CLI:
 		print("      user - The user who's encrypted private key should be exported")
 		print("        optional - defaults to the logged in user")
 		print("      filename - Filename to write the encrypted private key to")
-		print("        optional - if left out, the encryptedprivate key will be written to the console")
+		print("        optional - if left out, the encrypted private key will be written to the console")
+		print("")
+		print("  export-my-private-key [filename]")
+		print("    Export your private key in unencrypted form")
+		print("      filename - Filename to write the private key to")
+		print("        optional - if left out, the private key will be written to the console")
 		print("")
 
 	def parse(self):
@@ -337,6 +342,23 @@ class CLI:
 					filename = self.args[1]
 
 			privKey = self.client.getUserPrivateKeyEncrypted(exuser)
+
+			if filename == None:
+				print(privKey)
+			else:
+				print("Writing encrypted private key to "+filename)
+				f = open(filename,"w")
+				f.write(privKey)
+				f.close()
+		elif command == "export-my-private-key":
+			exuser = self.user
+			filename = None
+			if len(self.args)>0:
+				exuser = self.args[0]
+				if len(self.args)>1:
+					filename = self.args[1]
+
+			privKey = self.getPrivateKey()
 
 			if filename == None:
 				print(privKey)
