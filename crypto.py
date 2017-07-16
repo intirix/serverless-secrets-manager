@@ -6,6 +6,7 @@ from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
 from Crypto.Hash import HMAC
+from Crypto.Signature import PKCS1_v1_5
 from Crypto import Random
 import base64
 import os
@@ -70,10 +71,11 @@ class Crypto:
 
 	def sign(self,priv,message):
 		rng = Random.new().read
-		h = SHA256.new(message).digest()
+		h = SHA256.new(message)
 		rsapriv = RSA.importKey(priv)
-		signature = rsapriv.sign(h, rng)
-		return signature
+		signer = PKCS1_v1_5.new(rsapriv)
+		signature = signer.sign(h)
+		return self.encode(signature)
 
 	def getPublicKeyType(self,pub):
 		try:
@@ -84,8 +86,9 @@ class Crypto:
 
 	def verify(self,pub,message,signature):
 		rsapub = RSA.importKey(pub)
-		h = SHA256.new(message).digest()
-		return rsapub.verify(h, signature)
+		h = SHA256.new(message)
+		verifier = PKCS1_v1_5.new(rsapub)
+		return verifier.verify(h, self.decode(signature))
 
 	def encryptRSA(self,key,message):
 		rsapub = RSA.importKey(key)
