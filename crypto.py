@@ -36,7 +36,7 @@ class Crypto:
 		RSAkey = RSA.generate(2048, rng)
 		pubkey = RSAkey.publickey()
 		publicPem = pubkey.exportKey()
-		privatePem = RSAkey.exportKey()
+		privatePem = RSAkey.exportKey(pkcs=8)
 		return (privatePem,publicPem)
 
 	def pad(self,s):
