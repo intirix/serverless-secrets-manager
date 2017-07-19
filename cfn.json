@@ -574,7 +574,7 @@
       "Type" : "AWS::ApiGateway::Method",
       "Properties" : {
         "AuthorizationType": "NONE",
-        "HttpMethod": "GET",
+        "HttpMethod": "ANY",
         "Integration": {
           "Type": "AWS_PROXY",
           "IntegrationHttpMethod": "POST",

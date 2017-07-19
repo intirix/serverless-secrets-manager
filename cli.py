@@ -206,7 +206,8 @@ class CLI:
 			eek = self.crypto.encode(encryptedKey)
 			ehk = self.crypto.encode(hmacKey)
 
-			sid = self.client.addSecret(self.user,"1",eek,ehk,encryptedSecret,hmac)
+			secret = self.client.addSecret(self.user,"1",eek,ehk,encryptedSecret,hmac)
+			sid = secret["sid"]
 
 			print("Secret ID: "+str(sid))
 

@@ -24,6 +24,7 @@ class Server:
 		self.log = logging.getLogger("server")
 
 	def createContext(self,username):
+		self.log.info("Creating context for "+username)
 		ctx = Context(username)
 		if self.rules.isAdmin(username):
 			ctx.admin = True

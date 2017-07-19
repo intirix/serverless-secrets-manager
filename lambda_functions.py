@@ -66,6 +66,7 @@ def get_body(event):
 	return event["body"]
 
 def matches(event,meth,path):
+	log = logging.getLogger("Lambda")
 	if event==None:
 		return False
 
@@ -73,7 +74,9 @@ def matches(event,meth,path):
 		return False
 
 	if "requestContext" in event and "resourcePath" in event["requestContext"]:
-		return path == event["requestContext"]["resourcePath"]
+		if path == event["requestContext"]["resourcePath"]:
+			log.info("Matched "+meth+" to "+path)
+			return True
 
 	return False
 
