@@ -92,13 +92,13 @@ class Crypto:
 
 	def encryptRSA(self,key,message):
 		rsapub = RSA.importKey(key)
-		cipher = PKCS1_OAEP.new(rsapub)
+		cipher = PKCS1_OAEP.new(rsapub,SHA256)
 		ciphertext = cipher.encrypt(message)
 		return ciphertext
 
 	def decryptRSA(self,key,ciphertext):
 		rsapriv = RSA.importKey(key)
-		cipher = PKCS1_OAEP.new(rsapriv)
+		cipher = PKCS1_OAEP.new(rsapriv,SHA256)
 		message = cipher.decrypt(ciphertext)
 		return message
 
