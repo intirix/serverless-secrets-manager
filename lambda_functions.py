@@ -213,7 +213,7 @@ def create_user(event, context):
 	try:
 		user = event["pathParameters"]["username"]
 		body = get_body(event)
-		if obj.server.updateUser(obj.ctx,user,body):
+		if obj.server.addUser(obj.ctx,user,body):
 			if obj.server.addUser(obj.ctx,user,body):
 				return {"statusCode":201,"body":json.dumps(obj.server.getUser(obj.ctx,user),indent=2)}
 		return {"statusCode":404}

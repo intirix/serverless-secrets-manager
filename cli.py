@@ -42,8 +42,10 @@ class CLI:
 		print("    Generate a key for a user.  Will prompt for new password")
 		print("      user - username")
 		print("")
-		print("  create-secret")
-		print("    Create a new (empty) secret.  You can add extra fields later")
+		print("  create-secret [file]")
+		print("    Create a new  secret.  You can add extra fields later")
+		print("      file - json file to load as a secret")
+		print("        optional - defaults to an empty secret")
 		print("")
 		print("  get-secret <secretID>")
 		print("    Get a secret (requires a private key)")
@@ -77,6 +79,9 @@ class CLI:
 		print("    Export your private key in unencrypted form")
 		print("      filename - Filename to write the private key to")
 		print("        optional - if left out, the private key will be written to the console")
+		print("")
+		print("  generate-auth-token")
+		print("    Generate a token that can be used as a basic auth password")
 		print("")
 
 	def parse(self):
@@ -189,6 +194,13 @@ class CLI:
 			self.client.generateKeysForUser(user,newPass)
 
 		elif command == "create-secret":
+			secretValue = {}
+
+
+			if len(self.args)==1:
+				f = open(self.args[0],"r")
+				secretValue = json.load(f)
+				f.close()
 
 			pubKey = self.client.getUserPublicKey(self.user)
 			aesKey = self.crypto.generateRandomKey()
@@ -196,9 +208,10 @@ class CLI:
 
 			# I don't want to just encrypt {}, I want some randomness in there
 			rnd = self.crypto.encode(self.crypto.generateRandomKey())
+			secretValue["random"]=rnd
 
 			# Encrypt an empty secret for now
-			encryptedSecret = self.crypto.encrypt(aesKey,json.dumps({"random":rnd}))
+			encryptedSecret = self.crypto.encrypt(aesKey,json.dumps(secretValue))
 			encryptedKey = self.crypto.encryptRSA(pubKey,aesKey)
 
 			hmac = self.crypto.createHmac(hmacKey,encryptedSecret)
@@ -369,6 +382,15 @@ class CLI:
 				f.write(privKey)
 				f.close()
 
+		elif command == "generate-auth-token":
+			if self.mode == 'direct':
+				print("Auth token unavailable with direct access")
+			else:
+				if self.privateKeyFile==None:
+					print("Auth token requires a private key")
+				else:
+					authToken = self.helper.generateToken(self.getPrivateKey())
+					print("AuthToken: "+authToken)
 		else:
 			self.help()
 			raise Exception("Unknown command: "+command)
