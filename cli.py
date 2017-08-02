@@ -17,6 +17,7 @@ class CLI:
 		self.args = args
 		self.crypto = crypto.Crypto()
 		self.helper = client.ClientHelper()
+		self.password = None
 
 	def help(self):
 		print(sys.argv[0]+" <flags> <command> <arguments>")
@@ -26,6 +27,7 @@ class CLI:
 		print("  -b - base url - Base URL of the REST service")
 		print("  -s - secrets table - Name of the secrets DynamoDB table")
 		print("  -t - users table - Name of the users DynamoDB table")
+		print("  -p - password - Password used to decrypt")
 		print("  -u [username] - user to log in a")
 		print("")
 		print("Commands:")
@@ -86,7 +88,7 @@ class CLI:
 
 	def parse(self):
 
-		optlist, self.args = getopt.getopt(self.args, 'du:k:b:s:t:')
+		optlist, self.args = getopt.getopt(self.args, 'du:k:b:s:t:p:')
 
 		self.mode = "rest"
 		self.user = "admin"
@@ -109,6 +111,8 @@ class CLI:
 				self.secretsTable = a
 			elif o=='-t':
 				self.usersTable = a
+			elif o=='-p':
+				self.password = a
 			else:
 				assert False, "unhandled option"
 
@@ -136,7 +140,6 @@ class CLI:
 
 	def login(self):
 		print("Logging in as user: "+self.user)
-		self.password = None
 		if self.mode == 'direct':
 			# direct access doesn't require a password
 			self.client.login(self.user,"")
