@@ -61,3 +61,7 @@ aws --region=us-east-1 cloudformation delete-stack --stack-name SecretManagerAPI
 ### Generate the Android Retrofit2 client based on the swagger file
 
 sudo docker run --rm -v ${PWD}:/local swaggerapi/swagger-codegen-cli generate -i /local/swagger.yaml -l java --library retrofit2 --api-package com.intirix.secretsmanager.clientv1.api --model-package com.intirix.secretsmanager.clientv1.model -o /local/out/android
+
+### Generate the QT client
+
+sudo docker run --rm -v ${PWD}:/local swaggerapi/swagger-codegen-cli generate -i /local/swagger.yaml -l qt5cpp -o /local/out/qt --additional-properties cppNamespace=ssmv1
