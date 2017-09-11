@@ -273,6 +273,8 @@ class CLI:
 
 					origKey = self.crypto.decryptRSA(privKey,encryptedKey)
 					origSecretText = self.crypto.decrypt(origKey,storedEncryptedSecret)
+					if sys.version_info.major == 3 and type(origSecretText)==bytes:
+						origSecretText = origSecretText.decode('utf-8')
 					origSecret = json.loads(origSecretText)
 					del origSecret["random"]
 					secrets[sid]=origSecret

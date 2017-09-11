@@ -1,8 +1,17 @@
 #!/usr/bin/python
 
-import SimpleHTTPServer
-import BaseHTTPServer
-import SocketServer
+import sys
+if sys.version_info.major == 2:
+	import SimpleHTTPServer
+	import BaseHTTPServer
+	from BaseHTTPServer import BaseHTTPRequestHandler
+	import SocketServer
+	from urlparse import parse_qs, urlparse
+else:
+	import http.server
+	from http.server import BaseHTTPRequestHandler
+	import socketserver
+	from urllib.parse import parse_qs, urlparse
 import logging
 import json
 
@@ -10,7 +19,6 @@ import system
 import db
 import client
 import server
-import urlparse
 
 PORT = 8000
 
@@ -27,7 +35,7 @@ def matches(path,components):
 
 	return False
 
-class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+class MyHandler(BaseHTTPRequestHandler):
 
 	def _send_response(self,code):
 		self.send_response(code)
@@ -86,7 +94,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 				self.send_header("Content-Type","application/json")
 				self.end_headers()
 				self.wfile.write(json.dumps(resp,indent=2))
-		except server.AccessDeniedException, e:
+		except server.AccessDeniedException:
 			self._send_response(403)
 		except:
 			log.exception("Internal server error")
@@ -137,7 +145,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 					self._send_response(404)
 			else:
 				self._send_response(404)
-		except server.AccessDeniedException, e:
+		except server.AccessDeniedException:
 			self._send_response(403)
 		except:
 			log.exception("Internal server error")
@@ -156,7 +164,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 			parts = self.path.split('?')[0].split('/')
 			iface = self.server.serverIface
 
-			qs = urlparse.parse_qs(urlparse.urlparse(self.path).query)
+			qs = parse_qs(urlparse.urlparse(self.path).query)
 
 			if matches(self.path,["v1","users",None]):
 				user = parts[4]
@@ -191,7 +199,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 					self._send_response(404)
 			else:
 				self._send_response(404)
-		except server.AccessDeniedException, e:
+		except server.AccessDeniedException:
 			self._send_response(403)
 		except:
 			log.exception("Internal server error")
@@ -224,7 +232,11 @@ if __name__ == '__main__':
 	logger = logging.getLogger('')
 
 
-	server_class = BaseHTTPServer.HTTPServer
+	server_class = None
+	if sys.version_info.major == 2:
+		server_class = BaseHTTPServer.HTTPServer
+	else:
+		server_class = http.server.HTTPServer
 	httpd = server_class(("", PORT), MyHandler)
 
 	httpd.system = system.System()

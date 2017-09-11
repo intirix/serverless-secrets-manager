@@ -5,6 +5,7 @@ import os
 import uuid
 import boto3
 import logging
+import sys
 
 class DBInterface:
 
@@ -31,16 +32,16 @@ class DynamoDB(DBInterface):
 		data = None
 		username = None
 		try:
-			username = item["username"]["S"]
+			username = str(item["username"]["S"])
 
 			data = {}
 			data["admin"] = "N"
 			data["enabled"] = "N"
-			data["displayName"] = item["displayName"]["S"]
+			data["displayName"] = str(item["displayName"]["S"])
 
 			for key in [ "publicKey", "keyType", "encryptedPrivateKey", "admin", "enabled", "passwordAuth" ]:
 				if key in item and "S" in item[key]:
-					data[key] = item[key]["S"]
+					data[key] = str(item[key]["S"])
 		except:
 			if username==None:
 				self.log.exception("Could not parse user entry for unknown user")
@@ -72,7 +73,7 @@ class DynamoDB(DBInterface):
 				elif not "S" in item[key]:
 					raise(Exception("Secret "+sid+" had the wrong datatype for "+key))
 				else:
-					data[key] = item[key]["S"]
+					data[key] = str(item[key]["S"])
 
 			if "users" in item:
 				for user in item["users"]["M"].keys():
@@ -85,12 +86,12 @@ class DynamoDB(DBInterface):
 							elif not "S" in uitem[key]:
 								raise(Exception("Secret "+sid+" had the wrong datatype for "+key+" for user "+user))
 							else:
-								udata[key] = uitem[key]["S"]
+								udata[key] = str(uitem[key]["S"])
 
 
 						for key in ["canWrite","canShare","canUnshare"]:
 							if key in uitem and "S" in uitem[key]:
-								udata[key] = uitem[key]["S"]
+								udata[key] = str(uitem[key]["S"])
 
 						data["users"][user] = udata
 					except:
@@ -186,6 +187,16 @@ class MemoryDB(DBInterface):
 		self.udb = {}
 		self.sdb = {}
 
+	def _getValue(self,value):
+		v = value
+		if type(value)==int:
+			self.udb[username][fieldName]=value
+		elif sys.version_info.major == 3 and type(value)==bytes:
+			v = value.decode('utf-8')
+		else:
+			v = str(value)
+		return v
+
 	def sync(self):
 		return
 
@@ -204,7 +215,7 @@ class MemoryDB(DBInterface):
 		return None
 
 	def updateUserField(self,username,fieldName,value):
-		self.udb[username][fieldName]=value
+		self.udb[username][fieldName]=self._getValue(value)
 
 	def removeUserField(self,username,fieldName):
 		del self.udb[username][fieldName]
@@ -213,17 +224,17 @@ class MemoryDB(DBInterface):
 		sid = str(uuid.uuid4())
 		self.sdb[sid]={}
 		self.sdb[sid]["sid"]=sid
-		self.sdb[sid]["secretEncryptionProfile"]=secretEncryptionProfile
-		self.sdb[sid]["encryptedSecret"]=encryptedSecret
-		self.sdb[sid]["hmacKey"]=hmacKey
-		self.sdb[sid]["hmac"]=hmac
+		self.sdb[sid]["secretEncryptionProfile"]=self._getValue(secretEncryptionProfile)
+		self.sdb[sid]["encryptedSecret"]=self._getValue(encryptedSecret)
+		self.sdb[sid]["hmacKey"]=self._getValue(hmacKey)
+		self.sdb[sid]["hmac"]=self._getValue(hmac)
 		self.sdb[sid]["users"]={}
 		self.sdb[sid]["users"][owner]={"encryptedKey":encryptedKey,"canWrite":"Y","canShare":"Y","canUnshare":"Y"}
 		return sid
 
 	def updateSecret(self,sid,encryptedSecret,hmac):
-		self.sdb[sid]["encryptedSecret"]=encryptedSecret
-		self.sdb[sid]["hmac"]=hmac
+		self.sdb[sid]["encryptedSecret"]=self._getValue(encryptedSecret)
+		self.sdb[sid]["hmac"]=self._getValue(hmac)
 
 	def getSecret(self,sid):
 		return json.loads(json.dumps(self.sdb[sid]))

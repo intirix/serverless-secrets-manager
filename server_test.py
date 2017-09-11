@@ -113,7 +113,7 @@ class TestServer(unittest.TestCase):
 
 if __name__ == '__main__':
 	FORMAT = "%(asctime)-15s %(message)s"
-        logging.basicConfig(format=FORMAT)
+	logging.basicConfig(format=FORMAT)
 	unittest.main()
 
 
