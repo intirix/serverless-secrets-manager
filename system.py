@@ -103,14 +103,16 @@ class System:
 		self.setUserPublicKey(username,pub,"RSA")
 
 		encryptedPriv = self.crypto.encrypt(key,priv)
+		print("new priv key="+str(encryptedPriv))
 		self.setUserPrivateKey(username,encryptedPriv)
 		self.db.sync()
 		return True
 
 	def getUserPrivateKey(self,username,password):
-		self.log.warn("Retriving private key for "+username)
+		self.log.warning("Retriving private key for "+username)
 		key = self.crypto.keyStretchPassword(username,password)
 		encryptedPriv = self.db.getUser(username)["encryptedPrivateKey"]
+		print("epriv="+str(encryptedPriv))
 		priv = self.crypto.decrypt(key,encryptedPriv)
 		return priv
 

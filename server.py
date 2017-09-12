@@ -4,6 +4,7 @@ import json
 import crypto
 import accessrules
 import logging
+import traceback
 
 class Context:
 
@@ -31,13 +32,13 @@ class Server:
 		return ctx
 
 	def mockAuthentication(self,username):
-		self.log.warn("Mocking user "+username)
+		self.log.warning("Mocking user "+username)
 		return self.createContext(username)
 
 	def validateAuthentication(self,username,password):
 		try:
 			if self.system.getUser(username)==None:
-				self.log.warn("Unknown user: "+username)
+				self.log.warning("Unknown user: "+username)
 			elif self.rules.isEnabled(username):
 				userdata = self.system.getUser(username)
 
@@ -47,6 +48,7 @@ class Server:
 						if privKey!=None:
 							return self.createContext(username)
 					except:
+						traceback.print_exc()
 						# ignore and move on to the next auth type
 						pass
 
@@ -58,9 +60,9 @@ class Server:
 				if self.crypto.verify(pub,token,signedToken):
 					return self.createContext(username)
 				else:
-					self.log.warn("Failed to verify authentication for "+username)
+					self.log.warning("Failed to verify authentication for "+username)
 			else:
-				self.log.warn("Disabled user "+username+" attempted to login")
+				self.log.warning("Disabled user "+username+" attempted to login")
 		except:
 			self.log.exception("Failed login for user: "+username)
 		return None

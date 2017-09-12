@@ -138,7 +138,7 @@ def list_users(event, context):
 
 	try:
 		return {"statusCode":200,"body":json.dumps(obj.server.listUsers(obj.ctx),indent=2)}
-	except server.AccessDeniedException, e:
+	except server.AccessDeniedException:
 		obj.log.exception("Access Denied")
 		return {"statusCode":403}
 	except:
@@ -155,7 +155,7 @@ def get_user(event, context):
 	try:
 		user = event["pathParameters"]["username"]
 		return {"statusCode":200,"body":json.dumps(obj.server.getUser(obj.ctx,user),indent=2)}
-	except server.AccessDeniedException, e:
+	except server.AccessDeniedException:
 		obj.log.exception("Access Denied")
 		return {"statusCode":403}
 	except:
@@ -175,7 +175,7 @@ def update_user(event, context):
 		if obj.server.updateUser(obj.ctx,user,body):
 			return {"statusCode":200,"body":json.dumps(obj.server.getUser(obj.ctx,user),indent=2)}
 		return {"statusCode":404}
-	except server.AccessDeniedException, e:
+	except server.AccessDeniedException:
 		obj.log.exception("Access Denied")
 		return {"statusCode":403}
 	except:
@@ -196,7 +196,7 @@ def set_user_public_key(event, context):
 		if obj.server.setUserPublicKey(obj.ctx,user,body,keyType):
 			return {"statusCode":200,"body":json.dumps(obj.server.getUser(obj.ctx,user),indent=2)}
 		return {"statusCode":404}
-	except server.AccessDeniedException, e:
+	except server.AccessDeniedException:
 		obj.log.exception("Access Denied")
 		return {"statusCode":403}
 	except:
@@ -217,7 +217,7 @@ def create_user(event, context):
 			if obj.server.addUser(obj.ctx,user,body):
 				return {"statusCode":201,"body":json.dumps(obj.server.getUser(obj.ctx,user),indent=2)}
 		return {"statusCode":404}
-	except server.AccessDeniedException, e:
+	except server.AccessDeniedException:
 		obj.log.exception("Access Denied")
 		return {"statusCode":403}
 	except:
@@ -235,7 +235,7 @@ def get_user_public_key(event, context):
 		user = event["pathParameters"]["username"]
 		pem = obj.server.getUserPublicKey(obj.ctx,user)
 		return {"statusCode":200,"body":pem,"headers":{"Content-Type":"application/x-pem-file"}}
-	except server.AccessDeniedException, e:
+	except server.AccessDeniedException:
 		obj.log.exception("Access Denied")
 		return {"statusCode":403}
 	except:
@@ -254,7 +254,7 @@ def get_user_private_key_encrypted(event, context):
 		data = obj.server.getUserEncryptedPrivateKey(obj.ctx,user)
 		b64 = base64.b64encode(data)
 		return {"statusCode":200,"body":b64,"headers":{"Content-Type":"application/octet-stream"},"isBase64Encoded":True}
-	except server.AccessDeniedException, e:
+	except server.AccessDeniedException:
 		obj.log.exception("Access Denied")
 		return {"statusCode":403}
 	except:
@@ -281,7 +281,7 @@ def generate_user_keys(event, context):
 			pem = obj.server.generateKeysForUser(obj.ctx,user,body)
 			return {"statusCode":200,"body":pem,"headers":{"Content-Type":"application/x-pem-file"}}
 		return {"statusCode":404}
-	except server.AccessDeniedException, e:
+	except server.AccessDeniedException:
 		obj.log.exception("Access Denied")
 		return {"statusCode":403}
 	except:
@@ -301,7 +301,7 @@ def set_user_private_key_encrypted(event, context):
 		if obj.server.setUserEncryptedPrivateKey(obj.ctx,user,body):
 			return {"statusCode":200,"body":json.dumps(obj.server.getUser(obj.ctx,user),indent=2)}
 		return {"statusCode":404}
-	except server.AccessDeniedException, e:
+	except server.AccessDeniedException:
 		obj.log.exception("Access Denied")
 		return {"statusCode":403}
 	except:
@@ -318,7 +318,7 @@ def get_user_secrets(event, context):
 	try:
 		user = event["pathParameters"]["username"]
 		return {"statusCode":200,"body":json.dumps(obj.server.getMySecrets(obj.ctx,user),indent=2)}
-	except server.AccessDeniedException, e:
+	except server.AccessDeniedException:
 		obj.log.exception("Access Denied")
 		return {"statusCode":403}
 	except:
@@ -335,7 +335,7 @@ def get_secret(event, context):
 	try:
 		sid = event["pathParameters"]["sid"]
 		return {"statusCode":200,"body":json.dumps(obj.server.getSecret(obj.ctx,sid),indent=2)}
-	except server.AccessDeniedException, e:
+	except server.AccessDeniedException:
 		obj.log.exception("Access Denied")
 		return {"statusCode":403}
 	except:
@@ -355,7 +355,7 @@ def update_secret(event, context):
 		if obj.server.updateSecret(obj.ctx,sid,body):
 			return {"statusCode":200,"body":json.dumps(obj.server.getSecret(obj.ctx,sid),indent=2)}
 		return {"statusCode":404}
-	except server.AccessDeniedException, e:
+	except server.AccessDeniedException:
 		obj.log.exception("Access Denied")
 		return {"statusCode":403}
 	except:
@@ -373,7 +373,7 @@ def add_secret(event, context):
 		body = get_body(event)
 		sid = obj.server.addSecret(obj.ctx,body)
 		return {"statusCode":201,"body":json.dumps(obj.server.getSecret(obj.ctx,sid),indent=2)}
-	except server.AccessDeniedException, e:
+	except server.AccessDeniedException:
 		obj.log.exception("Access Denied")
 		return {"statusCode":403}
 	except:

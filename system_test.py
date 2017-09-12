@@ -4,7 +4,7 @@ import unittest
 import db
 import system
 import json
-
+import sys
 
 class TestSystem(unittest.TestCase):
 
@@ -67,8 +67,17 @@ class TestSystem(unittest.TestCase):
 		storedHmacKey = obj.crypto.decode(secretEntry["hmacKey"])
 		storedHmac = secretEntry["hmac"]
 		storedEncryptedSecret = secretEntry["encryptedSecret"]
+
+
+		print("storedHmacKey="+str(storedHmacKey))
+		print("storedHmac="+str(storedHmac))
+		print("storedEncryptedSecret="+str(storedEncryptedSecret))
+
 		self.assertEqual(True,obj.crypto.verifyHmac(storedHmacKey,storedEncryptedSecret,storedHmac))
 		origSecretText = obj.crypto.decrypt(origKey,storedEncryptedSecret)
+		if sys.version_info.major == 3 and type(origSecretText)==bytes:
+			origSecretText = origSecretText.decode('utf-8')
+
 		origSecret = json.loads(origSecretText)
 		self.assertEqual(secret["password"],origSecret["password"])
 

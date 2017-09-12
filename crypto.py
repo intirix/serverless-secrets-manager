@@ -10,6 +10,8 @@ from Crypto.Signature import PKCS1_v1_5
 from Crypto import Random
 import base64
 import os
+import sys
+import binascii
 
 from datetime import datetime, timedelta
 import time
@@ -21,10 +23,11 @@ class Crypto:
 		# I don't know if this is the proper way to handle this
 		# I think I might want to do a length check so that I fail
 		# when something funny is going on
-		if type(salt)==unicode:
-			salt=salt.encode('ascii','replace')
-		if type(password)==unicode:
-			password=password.encode('ascii','replace')
+		if sys.version_info.major == 2:
+			if type(salt)==unicode:
+				salt=salt.encode('ascii','replace')
+			if type(password)==unicode:
+				password=password.encode('ascii','replace')
 
 		key = scrypt.hash(password=password,salt=salt,buflen=buflen)
 		return key
@@ -42,13 +45,30 @@ class Crypto:
 
 	def pad(self,s):
 		# https://stackoverflow.com/questions/12524994/encrypt-decrypt-using-pycrypto-aes-256
-		return s + (AES.block_size - len(s) % AES.block_size) * chr(AES.block_size - len(s) % AES.block_size)
+		padnum = AES.block_size - len(s) % AES.block_size
+		mypad = (AES.block_size - len(s) % AES.block_size) * chr(padnum)
+		if sys.version_info.major == 2:
+			return s + mypad
+		else:
+			ret = None
+			if sys.version_info.major == 3 and type(s)==str:
+				ret = bytearray(s.encode('utf-8'))
+			else:
+				ret = bytearray(s)
+			for i in range(0,padnum):
+				ret.append(padnum)
+			return bytes(ret)
 
 	def unpad(self,s):
 		# https://stackoverflow.com/questions/12524994/encrypt-decrypt-using-pycrypto-aes-256
 		return s[:-ord(s[len(s)-1:])]
 
 	def encode(self,data):
+		if sys.version_info.major == 3:
+			if type(data)==str:
+				data = data.encode('utf-8')
+			return base64.b64encode(data).decode('utf-8')
+
 		return base64.b64encode(data)
 
 	def decode(self,data):
@@ -62,6 +82,7 @@ class Crypto:
 		return encoded
 
 	def decrypt(self,key,encrypted):
+		print("encrypted="+str(encrypted))
 		decoded = base64.b64decode(encrypted)
 		iv = decoded[0:AES.block_size]
 		emsg = decoded[AES.block_size:]
@@ -69,13 +90,23 @@ class Crypto:
 		decrypted = self.unpad(cipher.decrypt(emsg))
 		return decrypted
 
+	def getAscii(self,message):
+		msg = message
+		if sys.version_info.major == 2 and type(msg)==unicode:
+			msg = str(msg)
+		elif sys.version_info.major == 3 and type(msg)==str:
+			msg = msg.encode('utf-8')
+		return msg
+
 	def sign(self,priv,message):
 		rng = Random.new().read
-		h = SHA256.new(message)
+		h = SHA256.new(self.getAscii(message))
+		print("sign hash="+str(h.hexdigest()))
 		rsapriv = RSA.importKey(priv)
 		signer = PKCS1_v1_5.new(rsapriv)
-		signature = signer.sign(h)
-		return self.encode(signature)
+		sig = signer.sign(h)
+		print("out sig="+str(binascii.hexlify(sig)))
+		return self.encode(sig)
 
 	def getPublicKeyType(self,pub):
 		try:
@@ -85,10 +116,18 @@ class Crypto:
 			return "unknown"
 
 	def verify(self,pub,message,signature):
+		print("msg="+message)
+		print("sig="+signature)
 		rsapub = RSA.importKey(pub)
-		h = SHA256.new(message)
+		h = SHA256.new(self.getAscii(message))
+		print("sign hash="+str(h.hexdigest()))
 		verifier = PKCS1_v1_5.new(rsapub)
-		return verifier.verify(h, self.decode(signature))
+		#sig = self.decode(signature)
+		print("type of signature is "+str(type(signature)))
+		sig = base64.b64decode(signature.encode('utf-8'))
+		tmp = base64.b64encode(sig)
+		print("in sig="+str(binascii.hexlify(sig))+" for "+signature +" from "+str(tmp))
+		return verifier.verify(h, sig)
 
 	def encryptRSA(self,key,message):
 		rsapub = RSA.importKey(key)
@@ -103,7 +142,7 @@ class Crypto:
 		return message
 
 	def createHmac(self,key,message):
-		h = HMAC.new(key,message,SHA256)
+		h = HMAC.new(key,self.getAscii(message),SHA256)
 		return h.hexdigest()
 
 	def verifyHmac(self,key,message,mac):
