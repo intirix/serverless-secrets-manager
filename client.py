@@ -70,7 +70,9 @@ class ClientRestInterface:
 		r.raise_for_status()
 
 	def getUserPrivateKey(self,user,password):
-		raise(Exception("Not implemented"))
+		r = requests.get(self.baseurl+"/v1/users/"+user+"/keys/private/encrypted",auth=(self.username,self.password))
+		r.raise_for_status()
+		return r.text
 
 	def canCreateUser(self,user):
 		# Delegate to the server
