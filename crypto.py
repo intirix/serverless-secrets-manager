@@ -82,7 +82,6 @@ class Crypto:
 		return encoded
 
 	def decrypt(self,key,encrypted):
-		print("encrypted="+str(encrypted))
 		decoded = base64.b64decode(encrypted)
 		iv = decoded[0:AES.block_size]
 		emsg = decoded[AES.block_size:]
@@ -101,11 +100,9 @@ class Crypto:
 	def sign(self,priv,message):
 		rng = Random.new().read
 		h = SHA256.new(self.getAscii(message))
-		print("sign hash="+str(h.hexdigest()))
 		rsapriv = RSA.importKey(priv)
 		signer = PKCS1_v1_5.new(rsapriv)
 		sig = signer.sign(h)
-		print("out sig="+str(binascii.hexlify(sig)))
 		return self.encode(sig)
 
 	def getPublicKeyType(self,pub):
@@ -116,17 +113,12 @@ class Crypto:
 			return "unknown"
 
 	def verify(self,pub,message,signature):
-		print("msg="+message)
-		print("sig="+signature)
 		rsapub = RSA.importKey(pub)
 		h = SHA256.new(self.getAscii(message))
-		print("sign hash="+str(h.hexdigest()))
 		verifier = PKCS1_v1_5.new(rsapub)
 		#sig = self.decode(signature)
-		print("type of signature is "+str(type(signature)))
 		sig = base64.b64decode(signature.encode('utf-8'))
 		tmp = base64.b64encode(sig)
-		print("in sig="+str(binascii.hexlify(sig))+" for "+signature +" from "+str(tmp))
 		return verifier.verify(h, sig)
 
 	def encryptRSA(self,key,message):

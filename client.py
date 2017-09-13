@@ -4,6 +4,7 @@ import requests
 import json
 from datetime import datetime
 import crypto
+import base64
 
 class ClientSystemInterface:
 
@@ -72,7 +73,9 @@ class ClientRestInterface:
 	def getUserPrivateKey(self,user,password):
 		r = requests.get(self.baseurl+"/v1/users/"+user+"/keys/private/encrypted",auth=(self.username,self.password))
 		r.raise_for_status()
-		return r.text
+		ret = r.text
+		ret = base64.b64decode(ret)
+		return ret
 
 	def canCreateUser(self,user):
 		# Delegate to the server

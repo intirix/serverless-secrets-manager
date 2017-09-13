@@ -11,3 +11,4 @@ my.key
 gen
 .coverage
 out
+*.qmlc
