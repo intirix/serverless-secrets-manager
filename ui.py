@@ -10,6 +10,7 @@ import client
 import traceback
 import crypto
 import json
+import time
 
 def addField(v,d,field):
 	if field in d:
@@ -168,6 +169,7 @@ class Midtier(QObject):
 				Midtier.session.client.login(Midtier.session._user,Midtier.session._authToken)
 				self.sigMessage.emit("Downloading secrets")
 				Midtier.session._secrets = Midtier.session.client.getSecretsForUser(Midtier.session._user)
+				self.sigMessage.emit("Finished downloading secrets")
 				self.sigDownloadSecrets.emit()
 		except Exception as e:
 			traceback.print_exc()
@@ -215,6 +217,9 @@ class Midtier(QObject):
 				else:
 					print(json.dumps(origSecret,indent=2))
 				self.sigDecryptedSecret.emit(origSecret)
+				if count % 10 == 0:
+					# Release the GIL
+					time.sleep(0.1)
 			except:
 				failed = failed + 1
 				traceback.print_exc()
