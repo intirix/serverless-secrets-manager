@@ -21,6 +21,11 @@ Item {
             storage.setItem("encryptedPrivateKey-"+username.text, encryptedPrivateKey);
             midtier.getSecrets()
         }
+
+        onDownloadSecrets: {
+            console.log("Loading "+qmlBasePath+"/SecretList.qml")
+            stack.push({item:qmlBasePath+"/SecretList.qml",immediate:true})
+        }
     }
 
     Storage {
@@ -80,6 +85,8 @@ Item {
             label: "Login"
 
             onClicked: {
+                console.log("qmlBasePath="+qmlBasePath);
+                errorMessage.text = '';
                 midtier.url = url.text;
                 midtier.user = username.text
                 midtier.password = password.text;
