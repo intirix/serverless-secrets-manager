@@ -77,24 +77,6 @@ class MyProxyModel(QSortFilterProxyModel):
 		self.setDynamicSortFilter(True)
 
 
-	def lessThan(self,mileft,miright):
-		left = sourceModel().data(mileft)
-		right = sourceModel().data(miright)
-
-		leftstr = ""
-		rightstr = ""
-
-		leftstr = addField("",left,"website")
-		leftstr = addField(leftstr,left,"loginName")
-
-		rightstr = addField("",right,"website")
-		rightstr = addField(rightstr,right,"loginName")
-
-		print("comparing "+leftstr.upper() + " with " + rightstr.upper())
-
-		return leftstr.upper() < rightstr.upper()
-
-
 class Midtier(QObject):
 
 
