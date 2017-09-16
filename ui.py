@@ -11,6 +11,24 @@ import traceback
 import crypto
 import json
 
+def addField(v,d,field):
+	if field in d:
+		v = v + str(d[field])
+	return v
+
+def makeSortString(d):
+	ret = ""
+	if "website" in d:
+		ret = addField(ret,d,"website").replace("www.","")
+	elif "address" in d:
+		ret = addField(ret,d,"address").replace("www.","")
+	else:
+		ret = "zzz_"
+	ret = addField(ret,d,"loginName")
+	ret = ret.upper()
+	print("sort with "+ret)
+	return ret
+
 class Session:
 
 	def __init__(self):
@@ -26,23 +44,56 @@ class Session:
 		self._privKey = None
 		self._secrets = None
 		self._passwords = []
+		self._passwordsModCounter = 0
+		self._lock = threading.Lock()
 
 class PasswordModel(QAbstractListModel):
 
 	def __init__(self, parent=None):
 		super().__init__(parent)
+		self._modCounter = 0
+		self._data = []
 
 	def rowCount(self,parent):
-		return len(Midtier.session._passwords)
+		return len(self._getdata())
 
 	def data(self,index,role):
-		return Midtier.session._passwords[index.row()]
+		return self._getdata()[index.row()]
+
+	def _getdata(self):
+		with Midtier.session._lock:
+			if self._modCounter < Midtier.session._passwordsModCounter:
+				print("Refreshing model from "+str(self._modCounter)+" to "+str(Midtier.session._passwordsModCounter))
+				self._modCounter = Midtier.session._passwordsModCounter
+				self._data = sorted(Midtier.session._passwords,key=lambda x:makeSortString(x))
+				#self._data.extend(Midtier.session._passwords)
+				#print(json.dumps(self._data,indent=2))
+		return self._data
 
 class MyProxyModel(QSortFilterProxyModel):
 
 	def __init__(self, parent=None):
 		super().__init__(parent)
 		self.setSourceModel(PasswordModel(parent))
+		self.setDynamicSortFilter(True)
+
+
+	def lessThan(self,mileft,miright):
+		left = sourceModel().data(mileft)
+		right = sourceModel().data(miright)
+
+		leftstr = ""
+		rightstr = ""
+
+		leftstr = addField("",left,"website")
+		leftstr = addField(leftstr,left,"loginName")
+
+		rightstr = addField("",right,"website")
+		rightstr = addField(rightstr,right,"loginName")
+
+		print("comparing "+leftstr.upper() + " with " + rightstr.upper())
+
+		return leftstr.upper() < rightstr.upper()
 
 
 class Midtier(QObject):
@@ -58,6 +109,7 @@ class Midtier(QObject):
 		super().__init__(parent)
 		self.helper = client.ClientHelper()
 		self.crypto = crypto.Crypto()
+		self.model = PasswordModel(self)
 
 	@pyqtProperty('QString')
 	def url(self):
@@ -149,9 +201,11 @@ class Midtier(QObject):
 				origKey = self.crypto.decryptRSA(privKey,encryptedKey)
 				origSecretText = self.crypto.decrypt(origKey,encryptedSecret)
 				origSecret = json.loads(origSecretText.decode('utf-8'))
-				print(origSecret)
-				# list.append() is threadsafe
-				Midtier.session._passwords.append(origSecret)
+				print(json.dumps(origSecret,indent=2))
+				if "type" in origSecret and origSecret["type"]=="password":
+					with Midtier.session._lock:
+						Midtier.session._passwords.append(origSecret)
+						Midtier.session._passwordsModCounter += 1
 				self.sigDecryptedSecret.emit(origSecret)
 			except:
 				failed = failed + 1

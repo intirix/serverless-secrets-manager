@@ -58,11 +58,18 @@ Item {
     Component {
         id: passwordDelegate
         Rectangle {
-            height: 40
-            Column {
-                Text {
-                    text: " "+model.display.website
-                }
+            height: 45
+            Text {
+                id: labelWebsite
+                anchors.top: parent.top
+                font.pixelSize: 20
+                text: ""+model.display.website
+            }
+            Text {
+                anchors.top: labelWebsite.bottom
+                anchors.topMargin: 3
+                font.pixelSize: 15
+                text: ""+model.display.loginName
             }
         }
     }
@@ -71,18 +78,21 @@ Item {
         id: pmodel
     }
 
-    ListView {
+    Rectangle {
+	color: "#FF0000"
         anchors.top: header.bottom
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: footer.top
         anchors.margins: 10
+        ListView {
+            anchors.fill: parent
+            model: pmodel
+            delegate: passwordDelegate
+            highlight: Rectangle { color: "lightsteelblue"; radius: 5 }
+            focus: true
 
-        model: pmodel
-        delegate: passwordDelegate
-        highlight: Rectangle { color: "lightsteelblue"; radius: 5 }
-        focus: true
-
+        }
     }
 
     Component.onCompleted: {
