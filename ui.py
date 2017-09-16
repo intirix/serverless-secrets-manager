@@ -26,7 +26,6 @@ def makeSortString(d):
 		ret = "zzz_"
 	ret = addField(ret,d,"loginName")
 	ret = ret.upper()
-	print("sort with "+ret)
 	return ret
 
 class Session:
@@ -46,6 +45,7 @@ class Session:
 		self._passwords = []
 		self._passwordsModCounter = 0
 		self._lock = threading.Lock()
+		self._categories = {}
 
 class PasswordModel(QAbstractListModel):
 
@@ -66,8 +66,6 @@ class PasswordModel(QAbstractListModel):
 				print("Refreshing model from "+str(self._modCounter)+" to "+str(Midtier.session._passwordsModCounter))
 				self._modCounter = Midtier.session._passwordsModCounter
 				self._data = sorted(Midtier.session._passwords,key=lambda x:makeSortString(x))
-				#self._data.extend(Midtier.session._passwords)
-				#print(json.dumps(self._data,indent=2))
 		return self._data
 
 class MyProxyModel(QSortFilterProxyModel):
@@ -171,7 +169,6 @@ class Midtier(QObject):
 				self.sigMessage.emit("Downloading secrets")
 				Midtier.session._secrets = Midtier.session.client.getSecretsForUser(Midtier.session._user)
 				self.sigDownloadSecrets.emit()
-				print(Midtier.session._secrets)
 		except Exception as e:
 			traceback.print_exc()
 			self.sigMessage.emit("")
@@ -193,7 +190,7 @@ class Midtier(QObject):
 			self.sigMessage.emit("Decrypting secret "+str(count+1)+"/"+str(numSecrets))
 			try:
 				esecret = Midtier.session._secrets[key]
-				print("key="+str(esecret))
+				#print("key="+str(esecret))
 
 				if "users" in esecret and user in esecret["users"]:
 					encryptedKey = self.crypto.decode(esecret["users"][user]["encryptedKey"])
@@ -201,11 +198,22 @@ class Midtier(QObject):
 				origKey = self.crypto.decryptRSA(privKey,encryptedKey)
 				origSecretText = self.crypto.decrypt(origKey,encryptedSecret)
 				origSecret = json.loads(origSecretText.decode('utf-8'))
-				print(json.dumps(origSecret,indent=2))
-				if "type" in origSecret and origSecret["type"]=="password":
-					with Midtier.session._lock:
-						Midtier.session._passwords.append(origSecret)
-						Midtier.session._passwordsModCounter += 1
+				origSecret["sid"]=key
+				if "type" in origSecret:
+					if origSecret["type"]=="password":
+						with Midtier.session._lock:
+							self.updatePasswordCategoryInfo(origSecret)
+							Midtier.session._passwords.append(origSecret)
+							Midtier.session._passwordsModCounter += 1
+					elif origSecret["type"]=="passwordCategories":
+						print(json.dumps(origSecret,indent=2))
+						if "categories" in origSecret:
+							with Midtier.session._lock:
+								Midtier.session._categories = origSecret["categories"]
+								for password in Midtier.session._passwords:
+									self.updatePasswordCategoryInfo(password)
+				else:
+					print(json.dumps(origSecret,indent=2))
 				self.sigDecryptedSecret.emit(origSecret)
 			except:
 				failed = failed + 1
@@ -217,6 +225,31 @@ class Midtier(QObject):
 			self.sigMessage.emit("Failed to deccrypt "+str(failed)+" secrets")
 		else:
 			self.sigMessage.emit("")
+
+	def updatePasswordCategoryInfo(self,password):
+		password["categoryLabel"]="Unknown"
+		password["categoryBackground"]="Transparent"
+		password["categoryForeground"]="Transparent"
+
+		if "category" in password and password["category"] in Midtier.session._categories:
+			catInfo = Midtier.session._categories[password["category"]]
+			password["categoryBackground"]='#'+catInfo["backgroundColor"].upper()
+			password["categoryLabel"]=catInfo["label"]
+
+			# http://stackoverflow.com/questions/1855884/determine-font-color-based-on-background-color
+			# Counting the perceptive luminance - human eye favors green color...
+			bg = password["categoryBackground"]
+			r = 0.299 *int(bg[1:3],16)
+			g = 0.587 *int(bg[3:5],16)
+			b = 0.114 *int(bg[5:8],16)
+			a = 1.0 - ( ( r + g + b ) / 255.0 )
+			if a < 0.5:
+				password["categoryForeground"] = "#000000"
+			else:
+				password["categoryForeground"] = "#FFFFFF"
+			
+
+
 
 	@pyqtSlot()
 	def downloadPrivateKey(self):

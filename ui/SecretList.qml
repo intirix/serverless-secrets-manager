@@ -57,16 +57,35 @@ Item {
     Component {
         id: passwordDelegate
         Rectangle {
-            height: 45
+            height: 50
+            width: parent.width
             Text {
                 id: labelWebsite
                 anchors.top: parent.top
                 font.pixelSize: 20
                 text: ""+model.display.website
             }
+            Rectangle {
+                height: labelCategory.implicitHeight + 4
+                width: labelCategory.implicitWidth + labelCategory.implicitHeight
+                anchors.top: parent.top
+                anchors.right: parent.right
+                anchors.topMargin: 4
+                radius: height/2
+                color: model.display.categoryBackground
+                Text {
+                    id: labelCategory
+                    font.pixelSize: 13
+                    text: model.display.categoryLabel
+                    color: model.display.categoryForeground
+                    anchors.fill: parent
+                    anchors.leftMargin: parent.height/2
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
             Text {
                 anchors.top: labelWebsite.bottom
-                anchors.topMargin: 3
+                anchors.topMargin: 2
                 font.pixelSize: 15
                 text: ""+model.display.loginName
             }
@@ -78,7 +97,6 @@ Item {
     }
 
     Rectangle {
-	color: "#FF0000"
         anchors.top: header.bottom
         anchors.left: parent.left
         anchors.right: parent.right
@@ -90,7 +108,7 @@ Item {
             delegate: passwordDelegate
             highlight: Rectangle { color: "lightsteelblue"; radius: 5 }
             focus: true
-
+            clip: true
         }
     }
 
