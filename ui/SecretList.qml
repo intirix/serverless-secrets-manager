@@ -14,6 +14,10 @@ Item {
         onMessage: {
             textMessage.text = message;
         }
+        onDecryptedSecret: {
+            console.log("Decrypted a secret, invalidating the model")
+            pmodel.invalidate();
+        }
     }
 
     Rectangle {
@@ -58,12 +62,6 @@ Item {
             Column {
                 Text {
                     text: " "+model.display.website
-                }
-
-                Component.onCompleted: {
-                    for( var v in model.display) {
-                        console.log(v+" = "+model.display[v]);
-                    }
                 }
             }
         }

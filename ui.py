@@ -25,6 +25,7 @@ class Session:
 		self.client = None
 		self._privKey = None
 		self._secrets = None
+		self._passwords = []
 
 class PasswordModel(QAbstractListModel):
 
@@ -32,13 +33,10 @@ class PasswordModel(QAbstractListModel):
 		super().__init__(parent)
 
 	def rowCount(self,parent):
-		return 2
+		return len(Midtier.session._passwords)
 
 	def data(self,index,role):
-		ret = {}
-		ret["website"] = "www.google.com"
-
-		return ret
+		return Midtier.session._passwords[index.row()]
 
 class MyProxyModel(QSortFilterProxyModel):
 
@@ -54,6 +52,7 @@ class Midtier(QObject):
 	sigMessage = pyqtSignal(str,name="message",arguments=["message"])
 	sigDownloadKey = pyqtSignal(str,name="downloadKey",arguments=["encryptedPrivateKey"])
 	sigDownloadSecrets = pyqtSignal(name="downloadSecrets")
+	sigDecryptedSecret = pyqtSignal(dict,name="decryptedSecret")
 
 	def __init__(self, parent=None):
 		super().__init__(parent)
@@ -151,6 +150,9 @@ class Midtier(QObject):
 				origSecretText = self.crypto.decrypt(origKey,encryptedSecret)
 				origSecret = json.loads(origSecretText.decode('utf-8'))
 				print(origSecret)
+				# list.append() is threadsafe
+				Midtier.session._passwords.append(origSecret)
+				self.sigDecryptedSecret.emit(origSecret)
 			except:
 				failed = failed + 1
 				traceback.print_exc()
