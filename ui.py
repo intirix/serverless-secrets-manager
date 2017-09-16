@@ -258,8 +258,8 @@ if __name__ == '__main__':
 		basepath="."
 	basepath = os.path.abspath(basepath)
 
-	qmlRegisterType(Midtier, 'Midtier', 1, 0, 'Midtier')
-	qmlRegisterType(MyProxyModel, 'MyProxyModel', 1, 0, 'MyProxyModel')
+	qmlRegisterType(Midtier, 'CPMQ', 1, 0, 'Midtier')
+	qmlRegisterType(MyProxyModel, 'CPMQ', 1, 0, 'PasswordModel')
 	Midtier.session = Session()
 
 	engine = QQmlApplicationEngine()

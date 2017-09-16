@@ -1,6 +1,5 @@
 import QtQuick 2.0
-import Midtier 1.0
-import MyProxyModel 1.0
+import CPMQ 1.0
 
 
 Item {
@@ -74,7 +73,7 @@ Item {
         }
     }
 
-    MyProxyModel {
+    PasswordModel {
         id: pmodel
     }
 
