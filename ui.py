@@ -48,6 +48,103 @@ class Session:
 		self._lock = threading.Lock()
 		self._categories = {}
 
+class PasswordInfo(QObject):
+	sigChanged = pyqtSignal(name="passwordInfoChanged")
+	def __init__(self, parent=None):
+		super().__init__(parent)
+		self._sid = None
+
+	@pyqtProperty('QString',notify=sigChanged)
+	def sid(self):
+		return self._sid
+
+	@sid.setter
+	def sid(self, sid):
+		print("Setting sid="+sid)
+		self._sid = sid
+		for password in Midtier.session._passwords:
+			if sid == password["sid"]:
+				self._password = password
+				print("Emitting changed signal")
+				self.sigChanged.emit()
+
+	@pyqtProperty('QString',notify=sigChanged)
+	def website(self):
+		try:
+			return self._password["website"]
+		except:
+			return ""
+
+	@pyqtProperty('QString',notify=sigChanged)
+	def address(self):
+		try:
+			return self._password["address"]
+		except:
+			return self.website()
+
+	@pyqtProperty('QString',notify=sigChanged)
+	def passwordHasNumbers(self):
+		try:
+			return any(char.isdigit() for char in self._password["password"])
+		except:
+			return False
+
+	@pyqtProperty('QString',notify=sigChanged)
+	def passwordHasUpper(self):
+		try:
+			return any(char.isupper() for char in self._password["password"])
+		except:
+			return False
+
+	@pyqtProperty('QString',notify=sigChanged)
+	def passwordHasLower(self):
+		try:
+			return any(char.islower() for char in self._password["password"])
+		except:
+			return False
+
+	@pyqtProperty('QString',notify=sigChanged)
+	def passwordHasSpecial(self):
+		try:
+			return any(not char.isalnum() for char in self._password["password"])
+		except:
+			return False
+
+	@pyqtProperty('QString',notify=sigChanged)
+	def password(self):
+		try:
+			return self._password["password"]
+		except:
+			return ""
+
+	@pyqtProperty('QString',notify=sigChanged)
+	def passwordStars(self):
+		try:
+			return "*" * len(self._password["password"])
+		except:
+			return ""
+
+	@pyqtProperty('QString',notify=sigChanged)
+	def loginName(self):
+		try:
+			return self._password["loginName"]
+		except:
+			return ""
+
+	@pyqtProperty('QString',notify=sigChanged)
+	def dateChanged(self):
+		try:
+			return self._password["dateChanged"]
+		except:
+			return ""
+
+	@pyqtProperty('QString',notify=sigChanged)
+	def notes(self):
+		try:
+			return self._password["notes"]
+		except:
+			return ""
+
 class PasswordModel(QAbstractListModel):
 
 	def __init__(self, parent=None):
@@ -280,6 +377,7 @@ if __name__ == '__main__':
 
 	qmlRegisterType(Midtier, 'CPMQ', 1, 0, 'Midtier')
 	qmlRegisterType(MyProxyModel, 'CPMQ', 1, 0, 'PasswordModel')
+	qmlRegisterType(PasswordInfo, 'CPMQ', 1, 0, 'PasswordInfo')
 	Midtier.session = Session()
 
 	engine = QQmlApplicationEngine()
