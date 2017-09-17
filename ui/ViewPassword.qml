@@ -10,8 +10,16 @@ Rectangle {
         id: header
     }
 
+    ToastManager {
+        id: toast
+    }
+
     Midtier {
         id: midtier
+        onMessage: {
+            toast.show(message,3000);
+        }
+
     }
 
     PasswordInfo {
