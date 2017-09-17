@@ -3,7 +3,7 @@
 import sys, os
 from PyQt5.QtCore import pyqtProperty, QObject, QUrl, pyqtSlot, pyqtSignal
 from PyQt5.QtCore import QAbstractListModel, QSortFilterProxyModel
-from PyQt5.QtGui import QGuiApplication
+from PyQt5.QtGui import QGuiApplication, QClipboard
 from PyQt5.QtQml import qmlRegisterType, QQmlComponent, QQmlEngine, QQmlApplicationEngine
 import threading
 import client
@@ -120,7 +120,7 @@ class PasswordInfo(QObject):
 	@pyqtProperty('QString',notify=sigChanged)
 	def passwordStars(self):
 		try:
-			return "*" * len(self._password["password"])
+			return ( "*" * 8 ) + "{" + str(len(self._password["password"])) + "}"
 		except:
 			return ""
 
@@ -365,6 +365,11 @@ class Midtier(QObject):
 			self.error.emit(str(e))
 		return False
 
+	@pyqtSlot(str)
+	def updateClipboard(self,value):
+		QGuiApplication.clipboard().setText(value)
+		QGuiApplication.clipboard().setText(value,QClipboard.Selection)
+		self.sigMessage.emit("Copied to clipboard")
 
 
 if __name__ == '__main__':
