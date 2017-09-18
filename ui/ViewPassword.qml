@@ -91,6 +91,7 @@ Rectangle {
         }
 
         Rectangle {
+            id: copyArea
             color: "#0000FF"
             anchors.top: passwordLabel.bottom
             anchors.left: passwordLabel.right
@@ -108,6 +109,35 @@ Rectangle {
                 anchors.fill: parent
                 onClicked: {
                     midtier.updateClipboard(pi.password)
+                }
+            }
+        }
+
+        Rectangle {
+            color: "#0000FF"
+            anchors.top: copyArea.top
+            anchors.left: copyArea.right
+            anchors.leftMargin: 10
+            width: copyText.implicitWidth + 10
+            height: copyText.implicitHeight + 10
+            Text {
+                id: showText
+                text: "Show"
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    if (passwordStars.visible) {
+                        passwordStars.visible = false;
+                        password.visible = true;
+                        showText.text = "Hide";
+                    } else {
+                        passwordStars.visible = true;
+                        password.visible = false;
+                        showText.text = "Show";
+                    }
                 }
             }
         }
