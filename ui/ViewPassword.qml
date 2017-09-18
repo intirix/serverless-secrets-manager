@@ -3,7 +3,6 @@ import CPMQ 1.0
 
 
 Rectangle {
-    color: "#FF0000"
     property string selectedSecret: ""
 
     MyHeader {
@@ -34,7 +33,6 @@ Rectangle {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.margins: 10
-        color: "#00FF00"
 
         Text {
             id: website

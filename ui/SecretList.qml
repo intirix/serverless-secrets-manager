@@ -30,12 +30,13 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.margins: 10
-        height: 40
-
+        height: textMessage.implicitHeight + 6
+        visible: textMessage.text != ""
         Text {
             color: "#FFFFFF"
             id: textMessage
             anchors.margins: 3
+            anchors.verticalCenter: parent.verticalCenter
         }
     }
 
@@ -92,7 +93,7 @@ Item {
         anchors.top: header.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.bottom: footer.top
+        anchors.bottom: ( footer.visible ? footer.top : parent.bottom )
         anchors.margins: 10
         ListView {
             anchors.fill: parent
