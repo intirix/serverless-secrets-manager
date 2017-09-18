@@ -35,7 +35,10 @@ Item {
         Text {
             color: "#FFFFFF"
             id: textMessage
-            anchors.margins: 3
+            anchors.left: parent.left
+            anchors.topMargin: 3
+            anchors.bottomMargin: 3
+            anchors.leftMargin: height / 2
             anchors.verticalCenter: parent.verticalCenter
         }
     }

@@ -3,7 +3,7 @@
 import sys, os
 from PyQt5.QtCore import pyqtProperty, QObject, QUrl, pyqtSlot, pyqtSignal
 from PyQt5.QtCore import QAbstractListModel, QSortFilterProxyModel
-from PyQt5.QtGui import QGuiApplication, QClipboard
+from PyQt5.QtGui import QGuiApplication, QClipboard, QIcon
 from PyQt5.QtQml import qmlRegisterType, QQmlComponent, QQmlEngine, QQmlApplicationEngine
 import threading
 import client
@@ -396,7 +396,7 @@ class Midtier(QObject):
 if __name__ == '__main__':
 	app = QGuiApplication(sys.argv)
 
-	basepath = os.path.dirname(sys.argv[0])
+	basepath = os.path.dirname(os.path.realpath(__file__))
 	if len(basepath)==0:
 		basepath="."
 	basepath = os.path.abspath(basepath)
@@ -405,6 +405,8 @@ if __name__ == '__main__':
 	qmlRegisterType(MyProxyModel, 'CPMQ', 1, 0, 'PasswordModel')
 	qmlRegisterType(PasswordInfo, 'CPMQ', 1, 0, 'PasswordInfo')
 	Midtier.session = Session()
+	app.setWindowIcon(QIcon(basepath + os.path.sep + 'ui/icon.png'))
+	print("Using icon: "+basepath + os.path.sep + 'ui/icon.png')
 
 	engine = QQmlApplicationEngine()
 	rootContext = engine.rootContext()
