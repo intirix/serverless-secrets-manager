@@ -142,5 +142,75 @@ Rectangle {
             }
         }
 
+        Rectangle {
+            id: indUpper
+            height: 40
+            width: 40
+            radius: height/2
+            color: ( pi.passwordHasUpper ? "#3F51B5" : "#AAAAAA" )
+            anchors.top: copyArea.bottom
+            anchors.left: passwordLabel.right
+            anchors.topMargin: 7
+            anchors.leftMargin: 12
+            Text {
+                text: "A"
+                font.pixelSize: 30
+                color: "#FFFFFF"
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+        }
+        Rectangle {
+            id: indLower
+            height: 40
+            width: 40
+            radius: height/2
+            color: ( pi.passwordHasLower ? "#3F51B5" : "#AAAAAA" )
+            anchors.top: indUpper.top
+            anchors.left: indUpper.right
+            anchors.leftMargin: 5
+            Text {
+                text: "a"
+                font.pixelSize: 30
+                color: "#FFFFFF"
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+        }
+        Rectangle {
+            id: indNumber
+            height: 40
+            width: 40
+            radius: height/2
+            color: ( pi.passwordHasNumber ? "#3F51B5" : "#AAAAAA" )
+            anchors.top: indLower.top
+            anchors.left: indLower.right
+            anchors.leftMargin: 5
+            Text {
+                text: "2"
+                font.pixelSize: 30
+                color: "#FFFFFF"
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+        }
+        Rectangle {
+            id: indSpecial
+            height: 40
+            width: 40
+            radius: height/2
+            color: ( pi.passwordHasSpecial ? "#3F51B5" : "#AAAAAA" )
+            anchors.top: indNumber.top
+            anchors.left: indNumber.right
+            anchors.leftMargin: 5
+            Text {
+                text: "$"
+                font.pixelSize: 30
+                color: "#FFFFFF"
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+        }
+
     }
 }

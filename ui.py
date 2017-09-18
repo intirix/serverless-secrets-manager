@@ -82,28 +82,28 @@ class PasswordInfo(QObject):
 		except:
 			return self.website()
 
-	@pyqtProperty('QString',notify=sigChanged)
+	@pyqtProperty(bool,notify=sigChanged)
 	def passwordHasNumbers(self):
 		try:
 			return any(char.isdigit() for char in self._password["password"])
 		except:
 			return False
 
-	@pyqtProperty('QString',notify=sigChanged)
+	@pyqtProperty(bool,notify=sigChanged)
 	def passwordHasUpper(self):
 		try:
 			return any(char.isupper() for char in self._password["password"])
 		except:
 			return False
 
-	@pyqtProperty('QString',notify=sigChanged)
+	@pyqtProperty(bool,notify=sigChanged)
 	def passwordHasLower(self):
 		try:
 			return any(char.islower() for char in self._password["password"])
 		except:
 			return False
 
-	@pyqtProperty('QString',notify=sigChanged)
+	@pyqtProperty(bool,notify=sigChanged)
 	def passwordHasSpecial(self):
 		try:
 			return any(not char.isalnum() for char in self._password["password"])
