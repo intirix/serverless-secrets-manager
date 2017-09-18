@@ -211,6 +211,34 @@ Rectangle {
                 anchors.horizontalCenter: parent.horizontalCenter
             }
         }
+        Text {
+            id: categoryLabel
+            font.pixelSize: 15
+            text: "Category:"
+            anchors.top: indUpper.bottom
+            anchors.topMargin: 10
+        }
+
+        Rectangle {
+            height: labelCategory.implicitHeight + 4
+            width: labelCategory.implicitWidth + labelCategory.implicitHeight
+            anchors.top: indUpper.bottom
+            anchors.left: categoryLabel.right
+            anchors.topMargin: 9
+            anchors.leftMargin: 10
+            radius: height/2
+            color: pi.categoryBackground
+            Text {
+                id: labelCategory
+                font.pixelSize: 13
+                text: pi.categoryLabel
+                color: pi.categoryForeground
+                anchors.fill: parent
+                anchors.leftMargin: parent.height/2
+                anchors.verticalCenter: parent.verticalCenter
+            }
+        }
+
 
     }
 }

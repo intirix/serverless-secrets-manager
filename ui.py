@@ -69,6 +69,27 @@ class PasswordInfo(QObject):
 				self.sigChanged.emit()
 
 	@pyqtProperty('QString',notify=sigChanged)
+	def categoryLabel(self):
+		try:
+			return self._password["categoryLabel"]
+		except:
+			return "Unknown"
+
+	@pyqtProperty('QString',notify=sigChanged)
+	def categoryBackground(self):
+		try:
+			return self._password["categoryBackground"]
+		except:
+			return "#000000"
+
+	@pyqtProperty('QString',notify=sigChanged)
+	def categoryForeground(self):
+		try:
+			return self._password["categoryForeground"]
+		except:
+			return "#FFFFFF"
+
+	@pyqtProperty('QString',notify=sigChanged)
 	def website(self):
 		try:
 			return self._password["website"]
