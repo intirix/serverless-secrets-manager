@@ -23,8 +23,8 @@ Item {
         }
 
         onDownloadSecrets: {
-            console.log("Loading "+qmlBasePath+"/SecretList.qml")
-            stack.push({item:qmlBasePath+"/SecretList.qml"})
+            console.log("Loading "+qmlBasePath+"/PasswordList.qml")
+            stack.push({item:qmlBasePath+"/PasswordList.qml"})
         }
     }
 

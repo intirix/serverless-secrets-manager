@@ -91,7 +91,6 @@ Rectangle {
 
         Rectangle {
             id: copyArea
-            color: "#0000FF"
             anchors.top: passwordLabel.bottom
             anchors.left: passwordLabel.right
             anchors.topMargin: 7
@@ -113,7 +112,6 @@ Rectangle {
         }
 
         Rectangle {
-            color: "#0000FF"
             anchors.top: copyArea.top
             anchors.left: copyArea.right
             anchors.leftMargin: 10
