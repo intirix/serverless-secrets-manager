@@ -24,7 +24,7 @@ Item {
 
         onDownloadSecrets: {
             console.log("Loading "+qmlBasePath+"/SecretList.qml")
-            stack.push({item:qmlBasePath+"/SecretList.qml",immediate:true})
+            stack.push({item:qmlBasePath+"/SecretList.qml"})
         }
     }
 

@@ -8,6 +8,7 @@ Rectangle {
 
     MyHeader {
         id: header
+        backButtonEnabled: true
     }
 
     ToastManager {

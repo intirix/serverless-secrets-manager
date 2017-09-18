@@ -77,7 +77,7 @@ Item {
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
-                    stack.push({item:qmlBasePath+"/ViewPassword.qml",immediate:true, properties: {selectedSecret: model.display.sid}})
+                    stack.push({item:qmlBasePath+"/ViewPassword.qml",properties: {selectedSecret: model.display.sid}})
                 }
             }
 
