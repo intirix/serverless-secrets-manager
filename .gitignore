@@ -12,3 +12,5 @@ gen
 .coverage
 out
 *.qmlc
+build
+dist

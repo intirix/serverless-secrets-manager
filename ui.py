@@ -1,8 +1,13 @@
 #!/usr/bin/python3
 
 import sys, os
+import signal
+
+if getattr(sys, 'frozen', False):
+	print(sys._MEIPASS)
+
 from PyQt5.QtCore import pyqtProperty, QObject, QUrl, pyqtSlot, pyqtSignal
-from PyQt5.QtCore import QAbstractListModel, QSortFilterProxyModel
+from PyQt5.QtCore import QAbstractListModel, QSortFilterProxyModel, QTimer
 from PyQt5.QtGui import QGuiApplication, QClipboard, QIcon
 from PyQt5.QtQml import qmlRegisterType, QQmlComponent, QQmlEngine, QQmlApplicationEngine
 import threading
@@ -392,11 +397,26 @@ class Midtier(QObject):
 		QGuiApplication.clipboard().setText(value,QClipboard.Selection)
 		self.sigMessage.emit("Copied to clipboard")
 
+def sigint_handler(*args):
+	sys.stderr.write('\r')
+	QGuiApplication.quit()
 
 if __name__ == '__main__':
+	signal.signal(signal.SIGINT, sigint_handler)
 	app = QGuiApplication(sys.argv)
 
-	basepath = os.path.dirname(os.path.realpath(__file__))
+	# Get the interpreter to run so that the signal handler will actually
+	# execute when the user hits control-c
+	# https://stackoverflow.com/questions/4938723/what-is-the-correct-way-to-make-my-pyqt-application-quit-when-killed-from-the-co
+	timer = QTimer()
+	timer.start(500)  # You may change this if you wish.
+	timer.timeout.connect(lambda: None)  # Let the interpreter run each 500 ms.
+
+	# Get the correct basepath in all scenarios
+	if getattr(sys, 'frozen', False):
+		basepath = sys._MEIPASS
+	else:
+		basepath = os.path.dirname(os.path.realpath(__file__))
 	if len(basepath)==0:
 		basepath="."
 	basepath = os.path.abspath(basepath)
@@ -409,10 +429,14 @@ if __name__ == '__main__':
 	print("Using icon: "+basepath + os.path.sep + 'ui/icon.png')
 
 	engine = QQmlApplicationEngine()
+
+	# for the pyinstaller-extracted qml system imports
+	engine.addImportPath(basepath+'/_qml')
 	rootContext = engine.rootContext()
 	rootContext.setContextProperty("qmlBasePath",basepath+'/ui')
 
-	print("qmlBasePath="+basepath)
+	print("QML Import dirs: "+str(engine.importPathList()))
+
 	qmlFile = basepath+'/ui/main.qml'
 	print("Loading "+qmlFile)
 	engine.load(QUrl(qmlFile))
