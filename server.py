@@ -204,11 +204,10 @@ class Server:
 			data = json.loads(post_body)
 
 		encryptedKey = data["encryptedKey"]
-		hmacKey = data["hmacKey"]
 		encryptedSecret = data["encryptedSecret"]
 		hmac = data["hmac"]
 
-		return self.system.addSecret(ctx.user,"1",encryptedKey,hmacKey,encryptedSecret,hmac)
+		return self.system.addSecret(ctx.user,"1",encryptedKey,encryptedSecret,hmac)
 
 	def updateSecret(self,ctx,sid,post_body):
 		data = {}
