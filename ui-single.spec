@@ -22,7 +22,7 @@ added_files = [
 
 bin_files = []
 for lib in [ 'libQt5Quick', 'libQt5Sql' ]:
-	for found in lob.glob(site_packages_dir+'/PyQt5/Qt/lib/'+lib+'.*'):
+	for found in glob.glob(site_packages_dir+'/PyQt5/Qt/lib/'+lib+'.*'):
 		bin_files.append((found,'.'))
 for plugin in [ 'sqldrivers', 'egldeviceintegrations', 'xcbglintegrations' ]:
 	bin_files.append((site_packages_dir+'/PyQt5/Qt/plugins/'+plugin,'qt5_plugins/'+plugin))
