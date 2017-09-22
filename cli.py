@@ -206,36 +206,39 @@ class CLI:
 			self.client.generateKeysForUser(user,newPass)
 
 		elif command == "create-secret":
-			secretValue = {}
+			secretValues = [{}]
 
 
-			if len(self.args)==1:
-				f = open(self.args[0],"r")
-				secretValue = json.load(f)
-				f.close()
+			if len(self.args)>=1:
+				secretValues=[]
+				for sf in self.args:
+					f = open(sf,"r")
+					secretValues.append(json.load(f))
+					f.close()
 
 			pubKey = self.client.getUserPublicKey(self.user)
-			aesKey = self.crypto.generateRandomKey()
-			hmacKey = self.crypto.generateRandomKey()
+			for secretValue in secretValues:
+				aesKey = self.crypto.generateRandomKey()
+				hmacKey = self.crypto.generateRandomKey()
 
-			bothKeys = aesKey + hmacKey
+				bothKeys = aesKey + hmacKey
 
-			# I don't want to just encrypt {}, I want some randomness in there
-			rnd = self.crypto.encode(self.crypto.generateRandomKey())
-			secretValue["random"]=rnd
+				# I don't want to just encrypt {}, I want some randomness in there
+				rnd = self.crypto.encode(self.crypto.generateRandomKey())
+				secretValue["random"]=rnd
 
-			# Encrypt an empty secret for now
-			encryptedSecret = self.crypto.encrypt(aesKey,json.dumps(secretValue))
-			encryptedKey = self.crypto.encryptRSA(pubKey,bothKeys)
+				# Encrypt an empty secret for now
+				encryptedSecret = self.crypto.encrypt(aesKey,json.dumps(secretValue))
+				encryptedKey = self.crypto.encryptRSA(pubKey,bothKeys)
 
-			hmac = self.crypto.createHmac(hmacKey,encryptedSecret)
+				hmac = self.crypto.createHmac(hmacKey,encryptedSecret)
 
-			eek = self.crypto.encode(encryptedKey)
+				eek = self.crypto.encode(encryptedKey)
 
-			secret = self.client.addSecret(self.user,"1",eek,encryptedSecret,hmac)
-			sid = secret["sid"]
+				secret = self.client.addSecret(self.user,"1",eek,encryptedSecret,hmac)
+				sid = secret["sid"]
 
-			print("Secret ID: "+str(sid))
+				print("Secret ID: "+str(sid))
 
 		elif command == "get-secret":
 			if len(self.args)==0:
