@@ -113,7 +113,7 @@ class Server:
 			raise AccessDeniedException()
 		self.system.generateKeysForUser(user,password)
 		userdata = self.system.getUser(user)
-		print("userdata="+str(userdata))
+		#print("userdata="+str(userdata))
 		return userdata["publicKey"]
 
 	def getPublicKeyType(self,pub):

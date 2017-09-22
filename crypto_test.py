@@ -8,9 +8,17 @@ class TestCrypto(unittest.TestCase):
 
 	def testHmac(self):
 		obj=crypto.Crypto()
-		key=obj.generateRandomKey()
-		hmac=obj.createHmac(key,"hello")
-		self.assertEqual(True,obj.verifyHmac(key,"hello",hmac))
+		key1=obj.generateRandomKey()
+		key2=obj.generateRandomKey()
+		keyPair = key1+key2
+
+
+		hmacKey1 = keyPair[0:32]
+		hmacKey2 = keyPair[32:]
+		hmac1=obj.createHmac(key1,"hello")
+		hmac2=obj.createHmac(key2,"hello")
+		self.assertEqual(True,obj.verifyHmac(hmacKey1,"hello",hmac1))
+		self.assertEqual(True,obj.verifyHmac(hmacKey2,"hello",hmac2))
 
 	def testBase64(self):
 		obj=crypto.Crypto()

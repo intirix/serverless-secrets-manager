@@ -356,9 +356,6 @@ definitions:
       hmac:
         type: "string"
         description: "keyed-hash message authentication code for the secret"
-      hmacKey:
-        type: "string"
-        description: "key used to generate the HMAC"
       encryptedSecret:
         type: "string"
         description: "The encrypted secret"

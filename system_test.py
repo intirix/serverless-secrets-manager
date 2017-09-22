@@ -54,17 +54,18 @@ class TestSystem(unittest.TestCase):
 		hmacKey = obj.crypto.generateRandomKey()
 		encryptedSecret = obj.crypto.encrypt(aesKey,json.dumps(secret))
 		hmac = obj.crypto.createHmac(hmacKey,encryptedSecret)
-		encryptedKey = obj.crypto.encryptRSA(pubKey,aesKey)
+		encryptedKey = obj.crypto.encryptRSA(pubKey,aesKey+hmacKey)
 		
-		sid = obj.addSecret("user1","1",obj.crypto.encode(encryptedKey),obj.crypto.encode(hmacKey),encryptedSecret,hmac)
+		sid = obj.addSecret("user1","1",obj.crypto.encode(encryptedKey),encryptedSecret,hmac)
 
 		secretEntry = obj.getSecret(sid)
 
 		#print(json.dumps(secretEntry,indent=2))
 
 		storedEncryptedKey = obj.crypto.decode(secretEntry["users"]["user1"]["encryptedKey"])
-		origKey = obj.crypto.decryptRSA(privKey,storedEncryptedKey)
-		storedHmacKey = obj.crypto.decode(secretEntry["hmacKey"])
+		origKeyPair = obj.crypto.decryptRSA(privKey,storedEncryptedKey)
+		origKey = origKeyPair[0:32]
+		storedHmacKey = origKeyPair[32:]
 		storedHmac = secretEntry["hmac"]
 		storedEncryptedSecret = secretEntry["encryptedSecret"]
 

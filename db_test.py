@@ -44,7 +44,6 @@ class TestDynamoDB(unittest.TestCase):
 		entry["sid"]={"S":"21"}
 		entry["hmac"]={"S":"1234"}
 		entry["encryptedSecret"]={"S":"ksdfji2oj"}
-		entry["hmacKey"]={"S":"kjfgirojfdklgj"}
 
 		(sid,data) = obj._processSecret(entry)
 		self.assertEqual(None,sid)
@@ -56,7 +55,6 @@ class TestDynamoDB(unittest.TestCase):
 		entry["sid"]={"S":"21"}
 		entry["hmac"]={"S":"1234"}
 		entry["encryptedSecret"]={"S":"ksdfji2oj"}
-		entry["hmacKey"]={"S":"kjfgirojfdklgj"}
 		entry["secretEncryptionProfile"]={"S":"1"}
 
 		(sid,data) = obj._processSecret(entry)
@@ -69,7 +67,6 @@ class TestDynamoDB(unittest.TestCase):
 		entry["sid"]={"S":"21"}
 		entry["hmac"]={"S":"1234"}
 		entry["encryptedSecret"]={"S":"ksdfji2oj"}
-		entry["hmacKey"]={"S":"kjfgirojfdklgj"}
 		entry["secretEncryptionProfile"]={"S":"1"}
 		entry["users"]={"M":{}}
 		entry["users"]["M"]["myuser"]={"M":{}}
@@ -87,7 +84,6 @@ class TestDynamoDB(unittest.TestCase):
 		entry["sid"]={"S":"21"}
 		entry["hmac"]={"S":"1234"}
 		entry["encryptedSecret"]={"S":"ksdfji2oj"}
-		entry["hmacKey"]={"S":"kjfgirojfdklgj"}
 		entry["secretEncryptionProfile"]={"S":"1"}
 		entry["users"]={"M":{}}
 		entry["users"]["M"]["myuser"]={"M":{}}
