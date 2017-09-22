@@ -302,7 +302,8 @@ class Midtier(QObject):
 				if "users" in esecret and user in esecret["users"]:
 					encryptedKey = self.crypto.decode(esecret["users"][user]["encryptedKey"])
 				encryptedSecret = esecret["encryptedSecret"]
-				origKey = self.crypto.decryptRSA(privKey,encryptedKey)
+				origKeyPair = self.crypto.decryptRSA(privKey,encryptedKey)
+				origKey = origKeyPair[0:32]
 				origSecretText = self.crypto.decrypt(origKey,encryptedSecret)
 				origSecret = json.loads(origSecretText.decode('utf-8'))
 				origSecret["sid"]=key
