@@ -81,7 +81,7 @@ def matches(event,meth,path):
 	return False
 
 def single_func(event, context):
-	print(json.dumps(event,indent=2))
+	#print(json.dumps(event,indent=2))
 	if matches(event,"GET","/v1/users"):
 		return list_users(event, context)
 

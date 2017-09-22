@@ -18,6 +18,7 @@ class CLI:
 		self.crypto = crypto.Crypto()
 		self.helper = client.ClientHelper()
 		self.password = None
+		self.system = None
 
 	def help(self):
 		print(sys.argv[0]+" <flags> <command> <arguments>")
@@ -27,6 +28,7 @@ class CLI:
 		print("  -b - base url - Base URL of the REST service")
 		print("  -s - secrets table - Name of the secrets DynamoDB table")
 		print("  -t - users table - Name of the users DynamoDB table")
+		print("  -j - json database - Path to the local JSON database")
 		print("  -p - password - Password used to decrypt")
 		print("  -u [username] - user to log in a")
 		print("")
@@ -88,7 +90,7 @@ class CLI:
 
 	def parse(self):
 
-		optlist, self.args = getopt.getopt(self.args, 'du:k:b:s:t:p:')
+		optlist, self.args = getopt.getopt(self.args, 'du:k:b:s:t:p:j:')
 
 		self.mode = "rest"
 		self.user = "admin"
@@ -97,6 +99,7 @@ class CLI:
 		self.privateKey = None
 		self.secretsTable = None
 		self.usersTable = None
+		self.jsonPath = None
 
 		for o, a in optlist:
 			if o=='-d':
@@ -113,6 +116,8 @@ class CLI:
 				self.usersTable = a
 			elif o=='-p':
 				self.password = a
+			elif o=='-j':
+				self.jsonPath = a
 			else:
 				assert False, "unhandled option"
 
@@ -123,14 +128,18 @@ class CLI:
 	def init(self):
 
 		if self.mode == 'direct':
-			self.system = system.System()
-			if self.secretsTable==None or self.usersTable==None:
-				self.system.setDB(db.JsonDB('./local'))
-			else:
-				mydb = db.CacheDB(db.DynamoDB(self.usersTable,self.secretsTable))
-				self.system.setDB(mydb)
-			self.client = client.Client(client.ClientSystemInterface(self.system))
-			self.system.init()
+			if self.system == None:
+				self.system = system.System()
+				if self.secretsTable==None or self.usersTable==None:
+					if self.jsonPath == None:
+						self.system.setDB(db.MemoryDB())
+					else:
+						self.system.setDB(db.JsonDB(self.jsonPath))
+				else:
+					mydb = db.CacheDB(db.DynamoDB(self.usersTable,self.secretsTable))
+					self.system.setDB(mydb)
+				self.client = client.Client(client.ClientSystemInterface(self.system))
+				self.system.init()
 		else:
 			if self.baseurl == None:
 				self.help()
@@ -209,20 +218,21 @@ class CLI:
 			aesKey = self.crypto.generateRandomKey()
 			hmacKey = self.crypto.generateRandomKey()
 
+			bothKeys = aesKey + hmacKey
+
 			# I don't want to just encrypt {}, I want some randomness in there
 			rnd = self.crypto.encode(self.crypto.generateRandomKey())
 			secretValue["random"]=rnd
 
 			# Encrypt an empty secret for now
 			encryptedSecret = self.crypto.encrypt(aesKey,json.dumps(secretValue))
-			encryptedKey = self.crypto.encryptRSA(pubKey,aesKey)
+			encryptedKey = self.crypto.encryptRSA(pubKey,bothKeys)
 
 			hmac = self.crypto.createHmac(hmacKey,encryptedSecret)
 
 			eek = self.crypto.encode(encryptedKey)
-			ehk = self.crypto.encode(hmacKey)
 
-			secret = self.client.addSecret(self.user,"1",eek,ehk,encryptedSecret,hmac)
+			secret = self.client.addSecret(self.user,"1",eek,encryptedSecret,hmac)
 			sid = secret["sid"]
 
 			print("Secret ID: "+str(sid))
@@ -240,14 +250,16 @@ class CLI:
 
 
 			encryptedKey = self.crypto.decode(secretEntry["users"][self.user]["encryptedKey"])
-			hmacKey = self.crypto.decode(secretEntry["hmacKey"])
 			storedHmac = secretEntry["hmac"]
 			storedEncryptedSecret = secretEntry["encryptedSecret"]
+
+			origKeyPair = self.crypto.decryptRSA(privKey,encryptedKey)
+			origKey = origKeyPair[0:32]
+			hmacKey = origKeyPair[32:]
 
 			if not self.crypto.verifyHmac(hmacKey,storedEncryptedSecret,storedHmac):
 				raise(Exception("Secret verification failed!"))
 
-			origKey = self.crypto.decryptRSA(privKey,encryptedKey)
 			origSecretText = self.crypto.decrypt(origKey,storedEncryptedSecret)
 			origSecret = json.loads(origSecretText)
 			del origSecret["random"]
@@ -265,13 +277,15 @@ class CLI:
 			for sid in secretEntries.keys():
 				secretEntry = secretEntries[sid]
 				encryptedKey = self.crypto.decode(secretEntry["users"][self.user]["encryptedKey"])
-				hmacKey = self.crypto.decode(secretEntry["hmacKey"])
 				storedHmac = secretEntry["hmac"]
 				storedEncryptedSecret = secretEntry["encryptedSecret"]
 
+				origKeyPair = self.crypto.decryptRSA(privKey,encryptedKey)
+				origKey = origKeyPair[0:32]
+				hmacKey = origKeyPair[32:]
+
 				if self.crypto.verifyHmac(hmacKey,storedEncryptedSecret,storedHmac):
 
-					origKey = self.crypto.decryptRSA(privKey,encryptedKey)
 					origSecretText = self.crypto.decrypt(origKey,storedEncryptedSecret)
 					if sys.version_info.major == 3 and type(origSecretText)==bytes:
 						origSecretText = origSecretText.decode('utf-8')
@@ -314,7 +328,9 @@ class CLI:
 
 
 			encryptedKey = self.crypto.decode(secretEntry["users"][self.user]["encryptedKey"])
-			hmacKey = self.crypto.decode(secretEntry["hmacKey"])
+			origKeyPair = self.crypto.decryptRSA(privKey,encryptedKey)
+			origKey = origKeyPair[0:32]
+			hmacKey = origKeyPair[32:]
 			storedHmac = secretEntry["hmac"]
 			storedEncryptedSecret = secretEntry["encryptedSecret"]
 

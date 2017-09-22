@@ -59,7 +59,6 @@ class DynamoDB(DBInterface):
 
 		requiredFields = []
 		requiredFields.append("hmac")
-		requiredFields.append("hmacKey")
 		requiredFields.append("encryptedSecret")
 		requiredFields.append("secretEncryptionProfile")
 
@@ -141,13 +140,12 @@ class DynamoDB(DBInterface):
 		resp = self.client.update_item(TableName=self.usersTable,Key={"username":{"S":username}},AttributeUpdates=data)
 		return True
 
-	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,hmacKey,encryptedSecret,hmac):
+	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,encryptedSecret,hmac):
 		sid = str(uuid.uuid4())
 		item={}
 		item["sid"]={"S":sid}
 		item["secretEncryptionProfile"]={"S":str(secretEncryptionProfile)}
 		item["encryptedSecret"]={"S":encryptedSecret}
-		item["hmacKey"]={"S":hmacKey}
 		item["hmac"]={"S":hmac}
 		item["users"]={"M":{}}
 		item["users"]["M"][owner]={"M":{}}
@@ -220,13 +218,12 @@ class MemoryDB(DBInterface):
 	def removeUserField(self,username,fieldName):
 		del self.udb[username][fieldName]
 
-	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,hmacKey,encryptedSecret,hmac):
+	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,encryptedSecret,hmac):
 		sid = str(uuid.uuid4())
 		self.sdb[sid]={}
 		self.sdb[sid]["sid"]=sid
 		self.sdb[sid]["secretEncryptionProfile"]=self._getValue(secretEncryptionProfile)
 		self.sdb[sid]["encryptedSecret"]=self._getValue(encryptedSecret)
-		self.sdb[sid]["hmacKey"]=self._getValue(hmacKey)
 		self.sdb[sid]["hmac"]=self._getValue(hmac)
 		self.sdb[sid]["users"]={}
 		self.sdb[sid]["users"][owner]={"encryptedKey":encryptedKey,"canWrite":"Y","canShare":"Y","canUnshare":"Y"}
@@ -278,8 +275,8 @@ class CacheDB(MemoryDB):
 		self._refreshUser(username)
 		return ret
 
-	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,hmacKey,encryptedSecret,hmac):
-		return self.child.addSecret(owner,secretEncryptionProfile,encryptedKey,hmacKey,encryptedSecret,hmac)
+	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,encryptedSecret,hmac):
+		return self.child.addSecret(owner,secretEncryptionProfile,encryptedKey,encryptedSecret,hmac)
 
 	def updateSecret(self,sid,encryptedSecret,hmac):
 		return self.child.updateSecret(sid,encryptedSecret,hmac)

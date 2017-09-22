@@ -14,3 +14,4 @@ out
 *.qmlc
 build
 dist
+unittest.key

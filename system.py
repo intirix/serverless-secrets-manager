@@ -103,7 +103,7 @@ class System:
 		self.setUserPublicKey(username,pub,"RSA")
 
 		encryptedPriv = self.crypto.encrypt(key,priv)
-		print("new priv key="+str(encryptedPriv))
+		#print("new priv key="+str(encryptedPriv))
 		self.setUserPrivateKey(username,encryptedPriv)
 		self.db.sync()
 		return True
@@ -112,7 +112,7 @@ class System:
 		self.log.warning("Retriving private key for "+username)
 		key = self.crypto.keyStretchPassword(username,password)
 		encryptedPriv = self.db.getUser(username)["encryptedPrivateKey"]
-		print("epriv="+str(encryptedPriv))
+		#print("epriv="+str(encryptedPriv))
 		priv = self.crypto.decrypt(key,encryptedPriv)
 		return priv
 
@@ -122,9 +122,9 @@ class System:
 		self.db.sync()
 		return True
 
-	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,hmacKey,encryptedSecret,hmac):
+	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,encryptedSecret,hmac):
 		self.log.info("Adding secret for "+owner+", hmac="+hmac)
-		sid = self.db.addSecret(owner,secretEncryptionProfile,encryptedKey,hmacKey,encryptedSecret,hmac)
+		sid = self.db.addSecret(owner,secretEncryptionProfile,encryptedKey,encryptedSecret,hmac)
 		self.db.sync()
 		return sid
 

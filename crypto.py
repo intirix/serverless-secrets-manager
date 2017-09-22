@@ -82,6 +82,7 @@ class Crypto:
 		return encoded
 
 	def decrypt(self,key,encrypted):
+		#print("encrypted="+str(encrypted))
 		decoded = base64.b64decode(encrypted)
 		iv = decoded[0:AES.block_size]
 		emsg = decoded[AES.block_size:]

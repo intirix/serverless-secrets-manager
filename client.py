@@ -34,8 +34,9 @@ class ClientSystemInterface:
 		entry = self.system.getSecret(sid)
 		return user in entry["users"]
 
-	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,hmacKey,encryptedSecret,hmac):
-		return self.system.addSecret(owner,secretEncryptionProfile,encryptedKey,hmacKey,encryptedSecret,hmac)
+	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,encryptedSecret,hmac):
+		sid = self.system.addSecret(owner,secretEncryptionProfile,encryptedKey,encryptedSecret,hmac)
+		return self.getSecret(sid)
 
 	def getSecret(self,sid):
 		return self.system.getSecret(sid)
@@ -85,8 +86,8 @@ class ClientRestInterface:
 		# Delegate to the server
 		return True
 
-	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,hmacKey,encryptedSecret,hmac):
-		data = {"encryptedSecret":encryptedSecret,"hmac":hmac,"secretEncryptionProfile":"1","encryptedKey":encryptedKey,"hmacKey":hmacKey}
+	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,encryptedSecret,hmac):
+		data = {"encryptedSecret":encryptedSecret,"hmac":hmac,"secretEncryptionProfile":"1","encryptedKey":encryptedKey}
 		r = requests.post(self.baseurl+"/v1/secrets",auth=(self.username,self.password),data=json.dumps(data))
 		r.raise_for_status()
 		return r.json()
@@ -139,8 +140,8 @@ class Client:
 	def generateKeysForUser(self,user,password):
 		self.iface.generateKeysForUser(user,password)
 
-	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,hmacKey,encryptedSecret,hmac):
-		return self.iface.addSecret(owner,secretEncryptionProfile,encryptedKey,hmacKey,encryptedSecret,hmac)
+	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,encryptedSecret,hmac):
+		return self.iface.addSecret(owner,secretEncryptionProfile,encryptedKey,encryptedSecret,hmac)
 
 	def getSecret(self,sid):
 		if self.iface.canUserReadSecret(self.username,sid):
