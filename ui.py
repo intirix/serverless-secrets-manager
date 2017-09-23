@@ -428,8 +428,9 @@ if __name__ == '__main__':
 	qmlRegisterType(MyProxyModel, 'CPMQ', 1, 0, 'PasswordModel')
 	qmlRegisterType(PasswordInfo, 'CPMQ', 1, 0, 'PasswordInfo')
 	Midtier.session = Session()
-	app.setWindowIcon(QIcon(basepath + '/ui/icon.png'))
-	print("Using icon: "+basepath + '/ui/icon.png')
+	if os.name!='nt':
+		app.setWindowIcon(QIcon(basepath + '/ui/icon.png'))
+		print("Using icon: "+basepath + '/ui/icon.png')
 
 	engine = QQmlApplicationEngine()
 
