@@ -62,7 +62,7 @@ exe = EXE(pyz,
           debug=False,
           strip=False,
           upx=True,
-          console=True, icon='ui/icon.ico' )
+          console=False, icon='ui/icon.ico' )
 coll = COLLECT(exe,
                a.binaries,
                Tree('ui',prefix='ui/'),
