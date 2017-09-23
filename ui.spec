@@ -26,8 +26,18 @@ bin_files = []
 for lib in [ 'libQt5Quick', 'libQt5Sql' ]:
         for found in glob.glob(site_packages_dir+'/PyQt5/Qt/lib/'+lib+'.*'):
                 bin_files.append((found,'.'))
+plugin_dest = 'qt5_plugins'
+if os.name=='nt':
+	plugin_dest = 'PyQt5/Qt/plugins'
 for plugin in [ 'sqldrivers', 'egldeviceintegrations', 'xcbglintegrations' ]:
-        bin_files.append((site_packages_dir+'/PyQt5/Qt/plugins/'+plugin,'qt5_plugins/'+plugin))
+	if os.path.exists(site_packages_dir+'/PyQt5/Qt/plugins/'+plugin):
+		bin_files.append((site_packages_dir+'/PyQt5/Qt/plugins/'+plugin,plugin_dest+'/'+plugin))
+
+for dll in glob.glob(site_packages_dir+'/PyQt5/Qt/bin/*.dll'):
+	bin_files.append((dll,'.'))
+#for dll in [ 'libeay32.dll', 'qt5quick.dll', 'qt5sql.dll' ]:
+#	if os.path.exists(site_packages_dir+'/PyQt5/Qt/bin/'+dll):
+#		bin_files.append((site_packages_dir+'/PyQt5/Qt/bin/'+dll,'.'))
 
 
 a = Analysis(['ui.py'],

@@ -420,14 +420,16 @@ if __name__ == '__main__':
 		basepath = os.path.dirname(os.path.realpath(__file__))
 	if len(basepath)==0:
 		basepath="."
-	basepath = os.path.abspath(basepath)
+	basepath = os.path.abspath(basepath).replace('\\','/')
+	if basepath.find(':')>0:
+		basepath = 'file:///'+basepath
 
 	qmlRegisterType(Midtier, 'CPMQ', 1, 0, 'Midtier')
 	qmlRegisterType(MyProxyModel, 'CPMQ', 1, 0, 'PasswordModel')
 	qmlRegisterType(PasswordInfo, 'CPMQ', 1, 0, 'PasswordInfo')
 	Midtier.session = Session()
-	app.setWindowIcon(QIcon(basepath + os.path.sep + 'ui/icon.png'))
-	print("Using icon: "+basepath + os.path.sep + 'ui/icon.png')
+	app.setWindowIcon(QIcon(basepath + '/ui/icon.png'))
+	print("Using icon: "+basepath + '/ui/icon.png')
 
 	engine = QQmlApplicationEngine()
 

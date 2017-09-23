@@ -4,7 +4,15 @@ workspace="$( dirname $0 )"
 
 if [ ! -e .contents_ui ]
 then
-	virtualenv -p python3 .contents_ui
+	if [ -z "$VIRTUALENV" ]
+	then
+		VIRTUALENV=$( which virtualenv )
+	fi
+	if [ -z "PYTHON_BIN" ]
+	then
+		PYTHON_BIN=python3
+	fi
+	$VIRTUALENV -p $PYTHON_BIN .contents_ui
 fi
 
 
@@ -13,19 +21,26 @@ fi
 	workspace="$(pwd)"
 	/bin/rm -rf __pycache__ dist build
 
-	.contents_ui/bin/pip3 install -r requirements.txt
-	.contents_ui/bin/pip3 install -r requirements.ui.txt
-	.contents_ui/bin/pip3 install coverage
+	VENV_BIN=.contents_ui/bin
+	if [ -e .contents_ui/Scripts ]
+	then
+		VENV_BIN=.contents_ui/Scripts
+	fi
 
-        .contents_ui/bin/coverage erase
+	$VENV_BIN/pip3 install wheel
+	$VENV_BIN/pip3 install -r requirements.txt
+	$VENV_BIN/pip3 install -r requirements.ui.txt
+	$VENV_BIN/pip3 install coverage
+
+        $VENV_BIN/coverage erase
         for x in *_test.py
         do
                 #.contents/bin/coverage run -a --source $( echo *.py | tr ' ' ',' ) $x
-                .contents_ui/bin/coverage run -a --omit=.contents_ui/*,*_test.py $x
+                $VENV_BIN/coverage run -a --omit=.contents_ui/*,*_test.py $x
         done
-        .contents_ui/bin/coverage report
-	.contents_ui/bin/pyinstaller ui.spec
-	.contents_ui/bin/pyinstaller ui-single.spec
+        $VENV_BIN/coverage report
+	$VENV_BIN/pyinstaller ui.spec
+	$VENV_BIN/pyinstaller ui-single.spec
 
 
 )
