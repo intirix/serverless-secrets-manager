@@ -45,6 +45,7 @@ Item {
             id: url
             text: session.getUrl()
             KeyNavigation.tab: username
+            hint: 'URL'
         }
         MyTextInput {
             id: username
@@ -52,6 +53,7 @@ Item {
             anchors.top: url.bottom
             anchors.topMargin: url.height / 2
             KeyNavigation.tab: password
+            hint: 'Username'
         }
         MyTextInput {
             id: password
@@ -61,6 +63,7 @@ Item {
             inputMethodHints: Qt.ImhHiddenText;
             echoMode: TextInput.Password
             KeyNavigation.tab: login
+            hint: 'Password'
         }
         MyButton {
             id: login

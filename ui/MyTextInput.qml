@@ -9,6 +9,7 @@ Rectangle {
     border.width: 1
     radius: height * 1 / 3
     property alias text: input.text
+    property string hint: ''
     property alias inputMethodHints: input.inputMethodHints
     property alias echoMode: input.echoMode
     anchors {
@@ -17,6 +18,19 @@ Rectangle {
         topMargin: 10
         rightMargin: 20
         leftMargin: 20
+    }
+    Text {
+        anchors {
+            fill: parent
+            leftMargin: parent.height * 1 / 3
+            topMargin: parent.vpadding
+            bottomMargin: parent.vpadding
+        }
+        text: ( input.text == '' ? hint : '' )
+        height: parent.height
+        width: parent.width - parent.radius * 2
+        horizontalAlignment: TextInput.AlignLeft | TextInput.AlignHCenter
+        color: "#b8d0e3"
     }
     TextInput {
         id: input
@@ -29,7 +43,6 @@ Rectangle {
 
         height: parent.height
         width: parent.width - parent.radius * 2
-        text: "Enter value"
         horizontalAlignment: TextInput.AlignLeft | TextInput.AlignHCenter
     }
 }
