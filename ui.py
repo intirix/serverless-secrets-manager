@@ -52,6 +52,7 @@ class Session:
 		self._passwordsModCounter = 0
 		self._lock = threading.Lock()
 		self._categories = {}
+		self._categoriesList = []
 
 class PasswordInfo(QObject):
 	sigChanged = pyqtSignal(name="passwordInfoChanged")
@@ -199,6 +200,13 @@ class MyProxyModel(QSortFilterProxyModel):
 		self.setSourceModel(PasswordModel(parent))
 		self.setDynamicSortFilter(True)
 
+class MyCategoryProxyModel(QSortFilterProxyModel):
+
+	def __init__(self, parent=None):
+		super().__init__(parent)
+		self.setSourceModel(CategoryModel(parent))
+		self.setDynamicSortFilter(True)
+
 
 class Midtier(QObject):
 
@@ -261,6 +269,10 @@ class Midtier(QObject):
 		Midtier.session = Session()
 		self.sigMessage.emit("")
 
+	@pyqtProperty('QVariant')
+	def categories(self):
+		return sorted(Midtier.session._categoriesList,key=lambda x:x["text"])
+
 	@pyqtSlot()
 	def getSecrets(self):
 		threading.Thread(target=(lambda: self._getSecrets())).start()
@@ -318,6 +330,11 @@ class Midtier(QObject):
 						if "categories" in origSecret:
 							with Midtier.session._lock:
 								Midtier.session._categories = origSecret["categories"]
+								Midtier.session._categoriesList = []
+								for catId in Midtier.session._categories.keys():
+									catObj = {"id": catId}
+									catObj["text"] = Midtier.session._categories[catId]["label"]
+									Midtier.session._categoriesList.append(catObj)
 								for password in Midtier.session._passwords:
 									self.updatePasswordCategoryInfo(password)
 				else:
