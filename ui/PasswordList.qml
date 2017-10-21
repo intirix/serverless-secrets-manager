@@ -108,6 +108,29 @@ Item {
         }
     }
 
+    Rectangle {
+        width: 60
+        height: width
+        radius: width/2
+        anchors.right: parent.right
+        anchors.bottom: ( footer.visible ? footer.top : parent.bottom )
+        anchors.margins: 15
+        color: "#3F51B5"
+        Text {
+            text: "+"
+            font.pixelSize: parent.width * 7 / 8
+            color: "#FFFFFF"
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                stack.push({item:qmlBasePath+"/AddPassword.qml"})
+            }
+        }
+    }
+
     Component.onCompleted: {
         midtier.decryptSecrets();
     }
