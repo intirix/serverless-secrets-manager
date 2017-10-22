@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import QtQuick.Controls 1.4
 import CPMQ 1.0
 
 
@@ -18,9 +19,26 @@ Rectangle {
         onMessage: {
             toast.show(message,3000);
         }
-
+        onError: {
+            toast.show(error,3000);
+        }
+        onNewPassword: {
+            stack.push({item:qmlBasePath+"/ViewPassword.qml",replace: true,properties: {selectedSecret: sid}})
+        }
     }
 
+    ListModel {
+        id: cmodel
+
+        Component.onCompleted: {
+            var list = midtier.categories;
+            console.log(list);
+            cmodel.clear()
+            for ( var i = 0; i < list.length; i++) {
+                cmodel.append(list[i]);
+            }
+        }
+    }
 
     Rectangle {
         anchors.top: header.bottom
@@ -63,11 +81,31 @@ Rectangle {
             inputMethodHints: Qt.ImhHiddenText;
             echoMode: TextInput.Password
         }
-        MyButton {
+        ComboBox {
+            id: category
+            width: ( parent.width < 500 ? parent.width : 500 )
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.topMargin: 10
             anchors.top: password.bottom
+            model: cmodel
+            textRole: "text"
+            onCurrentIndexChanged: console.debug(currentIndex+": "+currentText)
+
+        }
+        MyButton {
+            anchors.top: category.bottom
             anchors.right: password.right
             anchors.topMargin: 10
             label: "Add"
+            onClicked: {
+                var obj = {};
+                obj.website=website.text;
+                obj.url=url.text;
+                obj.username=username.text;
+                obj.password=password.text;
+                obj.category=category.currentText;
+                midtier.addPassword(JSON.stringify(obj));
+            }
         }
 
 

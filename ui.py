@@ -16,6 +16,7 @@ import traceback
 import crypto
 import json
 import time
+import datetime
 
 def addField(v,d,field):
 	if field in d:
@@ -216,6 +217,7 @@ class Midtier(QObject):
 	sigDownloadKey = pyqtSignal(str,name="downloadKey",arguments=["encryptedPrivateKey"])
 	sigDownloadSecrets = pyqtSignal(name="downloadSecrets")
 	sigDecryptedSecret = pyqtSignal(dict,name="decryptedSecret")
+	sigNewPassword = pyqtSignal(str,name="newPassword",arguments=["sid"])
 
 	def __init__(self, parent=None):
 		super().__init__(parent)
@@ -293,6 +295,66 @@ class Midtier(QObject):
 			self.sigMessage.emit("")
 			self.error.emit(str(e))
 
+	@pyqtSlot(str)
+	def addPassword(self,value):
+		print("addPassword()")
+		threading.Thread(target=(lambda: self._addPassword(value))).start()
+
+	def _addPassword(self,value):
+		try:
+			obj = json.loads(value)
+			print(str(obj))
+			user = Midtier.session._user
+			self.sigMessage.emit("Downloading public key")
+			self._yield()
+			pubKey = Midtier.session.client.getUserPublicKey(user)
+			self.sigMessage.emit("Generating random keys")
+			self._yield()
+			aesKey = self.crypto.generateRandomKey()
+			hmacKey = self.crypto.generateRandomKey()
+			bothKeys = aesKey + hmacKey
+			rnd = self.crypto.encode(self.crypto.generateRandomKey())
+			secretValue={}
+			secretValue["random"]=rnd
+			secretValue["website"]=obj["website"]
+			secretValue["address"]=obj["url"]
+			secretValue["loginName"]=obj["username"]
+			secretValue["password"]=obj["password"]
+			secretValue["type"]="password"
+			secretValue["category"]="0"
+			for cat in Midtier.session._categoriesList:
+				try:
+					if cat["text"]==obj["category"]:
+						secretValue["category"]=cat["id"]
+				except:
+					pass
+			secretValue["notes"]=""
+			secretValue["dateChanges"]=datetime.date.today().isoformat()
+			self.sigMessage.emit("Encrypting password")
+			self._yield()
+			encryptedSecret = self.crypto.encrypt(aesKey,json.dumps(secretValue))
+			encryptedKey = self.crypto.encryptRSA(pubKey,bothKeys)
+			hmac = str(self.crypto.createHmac(hmacKey,encryptedSecret))
+			eek = str(self.crypto.encode(encryptedKey))
+			self.sigMessage.emit("Uploading encrypted password")
+			self._yield()
+			secret = Midtier.session.client.addSecret(user,"1",eek,encryptedSecret.decode("utf-8") ,hmac)
+			sid = secret["sid"]
+			secretValue["sid"] = sid
+			print("Secret ID: "+str(sid))
+
+			self.sigMessage.emit("Successfully uploaded encrypted password")
+			with Midtier.session._lock:
+				self.updatePasswordCategoryInfo(secretValue)
+				Midtier.session._passwords.append(secretValue)
+				Midtier.session._passwordsModCounter += 1
+
+			self.sigNewPassword.emit(sid)
+		except Exception as e:
+			traceback.print_exc()
+			self.sigMessage.emit("")
+			self.error.emit(str(e))
+
 	@pyqtSlot()
 	def decryptSecrets(self):
 		threading.Thread(target=(lambda: self._decryptSecrets())).start()
@@ -341,8 +403,7 @@ class Midtier(QObject):
 					print(json.dumps(origSecret,indent=2))
 				self.sigDecryptedSecret.emit(origSecret)
 				if count % 10 == 0:
-					# Release the GIL
-					time.sleep(0.1)
+					self._yield()
 			except:
 				failed = failed + 1
 				traceback.print_exc()
@@ -414,6 +475,10 @@ class Midtier(QObject):
 		QGuiApplication.clipboard().setText(value)
 		QGuiApplication.clipboard().setText(value,QClipboard.Selection)
 		self.sigMessage.emit("Copied to clipboard")
+
+	def _yield(self):
+		# Release the GIL
+		time.sleep(0.1)
 
 def sigint_handler(*args):
 	sys.stderr.write('\r')
