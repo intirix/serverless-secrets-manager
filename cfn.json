@@ -138,7 +138,7 @@
         "MemorySize" : 128,
         "Runtime" : "python2.7",
         "Role" : {"Fn::GetAtt" : [ "Role", "Arn" ]},
-        "Timeout" : 60
+        "Timeout" : 120
       }
     },
 
