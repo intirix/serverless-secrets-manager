@@ -65,6 +65,11 @@ class CLI:
 		print("      value - value to set")
 		print("        optional - will prompt for value if not provided")
 		print("")
+		print("  share-secret <secretID> <user>")
+		print("    Share a secret with another user")
+		print("      secretID - ID of the secret")
+		print("      user - username to share with")
+		print("")
 		print("  export-user-public-key [user] [filename]")
 		print("    Export a user's public key")
 		print("      user - The user who's public key should be exported")
@@ -352,6 +357,33 @@ class CLI:
 			hmac = self.crypto.createHmac(hmacKey,encryptedSecret)
 
 			self.client.updateSecret(sid,encryptedSecret,hmac)
+
+		elif command == "share-secret":
+			if len(self.args)==0:
+				self.help()
+				raise Exception("Expected arguments <secretID> and <username>")
+			elif len(self.args)==1:
+				self.help()
+				raise Exception("Expected argument <username>")
+
+			sid = self.args[0]
+			user = self.args[1]
+
+			password = self.getPassword()
+			privKey = self.getPrivateKey()
+			print("Downloading "+user+"'s public key")
+			pubKey = self.client.getUserPublicKey(user)
+			print("Downloading "+str(sid))
+			secretEntry = self.client.getSecret(sid)
+			encryptedKey = self.crypto.decode(secretEntry["users"][self.user]["encryptedKey"])
+			print("Decrypting "+str(sid)+"'s AES key")
+			origKeyPair = self.crypto.decryptRSA(privKey,encryptedKey)
+			origKey = origKeyPair[0:32]
+			hmacKey = origKeyPair[32:]
+			print("Encrypting "+str(sid)+"'s AES key")
+			encryptedKey2 = self.crypto.encryptRSA(pubKey,origKey)
+			print("Sharing with "+user)
+			self.client.shareSecret(sid,user,self.crypto.encode(encryptedKey2))
 
 		elif command == "export-user-public-key":
 			exuser = self.user

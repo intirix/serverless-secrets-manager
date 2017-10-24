@@ -156,6 +156,23 @@ class DynamoDB(DBInterface):
 		self.client.put_item(TableName=self.secretsTable,Item=item)
 		return sid
 
+	def shareSecret(self,sid,user,encryptedKey):
+		data={}
+
+		exp = "SET #users.#user = :userdata"
+		attrNames = {}
+		attrNames["users"]="users"
+		attrNames["user"]=user
+		attrVals = {}
+		attrVals["userdata"]={"M":{}}
+		attrVals["userdata"]["M"]["encryptedKey"]={"S":encryptedKey}
+		attrVals["userdata"]["M"]["canWrite"]={"S":"Y"}
+		attrVals["userdata"]["M"]["canShare"]={"S":"Y"}
+		attrVals["userdata"]["M"]["canUnshare"]={"S":"Y"}
+
+		resp = self.client.update_item(TableName=self.secretsTable,Key={"sid":{"S":sid}},UpdateExpression=exp,ExpressionAttributeNames=attrNames,ExpressionAttributeValues=attrVals)
+		return sid
+
 	def updateSecret(self,sid,encryptedSecret,hmac):
 		data={}
 		data["encryptedSecret"]={"Value":{"S":encryptedSecret},"Action":"PUT"}
@@ -229,6 +246,10 @@ class MemoryDB(DBInterface):
 		self.sdb[sid]["users"][owner]={"encryptedKey":encryptedKey,"canWrite":"Y","canShare":"Y","canUnshare":"Y"}
 		return sid
 
+	def shareSecret(self,sid,user,encryptedKey):
+		self.sdb[sid]["users"][user]={"encryptedKey":encryptedKey,"canWrite":"Y","canShare":"Y","canUnshare":"Y"}
+		return sid
+
 	def updateSecret(self,sid,encryptedSecret,hmac):
 		self.sdb[sid]["encryptedSecret"]=self._getValue(encryptedSecret)
 		self.sdb[sid]["hmac"]=self._getValue(hmac)
@@ -280,6 +301,9 @@ class CacheDB(MemoryDB):
 
 	def updateSecret(self,sid,encryptedSecret,hmac):
 		return self.child.updateSecret(sid,encryptedSecret,hmac)
+
+	def shareSecret(self,sid,user,encryptedKey):
+		return self.child.shareSecret(sid,user,encryptedKey)
 
 	def getSecret(self,sid):
 		return self.child.getSecret(sid)

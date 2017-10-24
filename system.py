@@ -134,6 +134,12 @@ class System:
 		self.db.sync()
 		return True
 
+	def shareSecret(self,sid,user,encryptedKey):
+		self.log.info("Sharing secret "+sid+" to "+user)
+		self.db.shareSecret(sid,user,encryptedKey)
+		self.db.sync()
+		return True
+
 	def getSecret(self,sid):
 		return self.db.getSecret(sid)
 

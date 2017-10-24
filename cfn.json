@@ -175,7 +175,8 @@
         "RestMethodGETV1Users",
         "RestMethodGETV1UsersUsernameSecrets",
         "RestMethodPOSTV1Secrets",
-        "RestMethodPOSTV1UsersUsernameKeys"
+        "RestMethodPOSTV1UsersUsernameKeys",
+        "RestMethodANYV1SecretsSidUsersUsername"
       ],
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
@@ -597,9 +598,65 @@
         "ResourceId": {"Ref":"RestResourceV1SecretsSid"},
         "RestApiId": {"Ref":"RestApi"}
       }
+    },
+
+
+    "RestResourceV1SecretsSidUsers": {
+      "DependsOn": [
+        "RestResourceV1SecretsSid",
+        "Function"
+      ],
+      "Type" : "AWS::ApiGateway::Resource",
+      "Properties" : {
+        "ParentId" : {"Ref":"RestResourceV1SecretsSid"},
+        "PathPart" : "users",
+        "RestApiId" : {"Ref":"RestApi"}
+      }
+    },
+    "RestResourceV1SecretsSidUsersUsername": {
+      "DependsOn": [
+        "RestResourceV1SecretsSidUsers",
+        "Function"
+      ],
+      "Type" : "AWS::ApiGateway::Resource",
+      "Properties" : {
+        "ParentId" : {"Ref":"RestResourceV1SecretsSidUsers"},
+        "PathPart" : "{username}",
+        "RestApiId" : {"Ref":"RestApi"}
+      }
+    },
+    "RestMethodANYV1SecretsSidUsersUsername": {
+      "DependsOn": [
+        "RestResourceV1SecretsSidUsersUsername",
+        "LambdaPermission"
+      ],
+      "Type" : "AWS::ApiGateway::Method",
+      "Properties" : {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "ANY",
+        "Integration": {
+          "Type": "AWS_PROXY",
+          "IntegrationHttpMethod": "POST",
+          "Uri": {"Fn::Join": [ "", [
+              "arn:aws:apigateway:",
+              {"Ref":"AWS::Region"},
+              ":lambda:path/2015-03-31/functions/",
+              {"Fn::GetAtt" : [ "Function", "Arn" ]},
+              "/invocations"
+            ]]}
+        },
+        "MethodResponses": [
+          {
+            "StatusCode": "200"
+          },
+          {
+            "StatusCode": "201"
+          }
+        ],
+        "ResourceId": {"Ref":"RestResourceV1SecretsSidUsersUsername"},
+        "RestApiId": {"Ref":"RestApi"}
+      }
     }
-
-
 
 
 

@@ -47,6 +47,9 @@ class ClientSystemInterface:
 	def updateSecret(self,sid,encryptedSecret,hmac):
 		self.system.updateSecret(sid,encryptedSecret,hmac)
 
+	def shareSecret(self,sid,user,encryptedSecret):
+		self.system.shareSecret(sid,user,encryptedSecret)
+
 class ClientRestInterface:
 
 	def __init__(self,baseurl):
@@ -108,6 +111,12 @@ class ClientRestInterface:
 		r.raise_for_status()
 		return r.json()
 
+	def shareSecret(self,sid,user,encryptedKey):
+		data = {"encryptedKey":encryptedKey}
+		r = requests.put(self.baseurl+"/v1/secrets/"+sid+"/users/"+user,auth=(self.username,self.password),data=json.dumps(data))
+		r.raise_for_status()
+		return r.json()
+
 
 class Client:
 
@@ -142,6 +151,9 @@ class Client:
 
 	def addSecret(self,owner,secretEncryptionProfile,encryptedKey,encryptedSecret,hmac):
 		return self.iface.addSecret(owner,secretEncryptionProfile,encryptedKey,encryptedSecret,hmac)
+
+	def shareSecret(self,sid,user,encryptedKey):
+		self.iface.shareSecret(sid,user,encryptedKey)
 
 	def getSecret(self,sid):
 		if self.iface.canUserReadSecret(self.username,sid):

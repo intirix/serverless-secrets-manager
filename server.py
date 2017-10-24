@@ -208,6 +208,16 @@ class Server:
 
 		return self.system.addSecret(ctx.user,"1",encryptedKey,encryptedSecret,hmac)
 
+	def shareSecret(self,ctx,sid,user,post_body):
+		data = {}
+		if len(post_body)>0:
+			data = json.loads(post_body)
+		encryptedKey = data["encryptedKey"]
+		self.system.shareSecret(sid,user,encryptedKey)
+		ret = self.system.getSecret(sid)
+		ret["sid"] = sid
+		return ret
+
 	def updateSecret(self,ctx,sid,post_body):
 		data = {}
 		if len(post_body)>0:
