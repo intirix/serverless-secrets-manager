@@ -161,14 +161,14 @@ class DynamoDB(DBInterface):
 
 		exp = "SET #users.#user = :userdata"
 		attrNames = {}
-		attrNames["users"]="users"
-		attrNames["user"]=user
+		attrNames["#users"]="users"
+		attrNames["#user"]=user
 		attrVals = {}
-		attrVals["userdata"]={"M":{}}
-		attrVals["userdata"]["M"]["encryptedKey"]={"S":encryptedKey}
-		attrVals["userdata"]["M"]["canWrite"]={"S":"Y"}
-		attrVals["userdata"]["M"]["canShare"]={"S":"Y"}
-		attrVals["userdata"]["M"]["canUnshare"]={"S":"Y"}
+		attrVals[":userdata"]={"M":{}}
+		attrVals[":userdata"]["M"]["encryptedKey"]={"S":encryptedKey}
+		attrVals[":userdata"]["M"]["canWrite"]={"S":"Y"}
+		attrVals[":userdata"]["M"]["canShare"]={"S":"Y"}
+		attrVals[":userdata"]["M"]["canUnshare"]={"S":"Y"}
 
 		resp = self.client.update_item(TableName=self.secretsTable,Key={"sid":{"S":sid}},UpdateExpression=exp,ExpressionAttributeNames=attrNames,ExpressionAttributeValues=attrVals)
 		return sid
