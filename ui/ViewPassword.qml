@@ -252,5 +252,19 @@ Rectangle {
         }
 
 
+        Text {
+            text: "Share"
+            anchors.bottom: parent.bottom
+            anchors.right: parent.right
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    stack.push({item:qmlBasePath+"/SharePassword.qml",properties: {selectedSecret: selectedSecret}})
+                }
+            }
+        }
+
+
+
     }
 }

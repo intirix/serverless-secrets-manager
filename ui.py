@@ -54,6 +54,7 @@ class Session:
 		self._lock = threading.Lock()
 		self._categories = {}
 		self._categoriesList = []
+		self._users = {}
 
 class PasswordInfo(QObject):
 	sigChanged = pyqtSignal(name="passwordInfoChanged")
@@ -218,6 +219,7 @@ class Midtier(QObject):
 	sigDownloadSecrets = pyqtSignal(name="downloadSecrets")
 	sigDecryptedSecret = pyqtSignal(dict,name="decryptedSecret")
 	sigNewPassword = pyqtSignal(str,name="newPassword",arguments=["sid"])
+	sigUsersListed = pyqtSignal(name="usersListed")
 
 	def __init__(self, parent=None):
 		super().__init__(parent)
@@ -274,6 +276,15 @@ class Midtier(QObject):
 	@pyqtProperty('QVariant')
 	def categories(self):
 		return sorted(Midtier.session._categoriesList,key=lambda x:x["text"])
+
+	@pyqtProperty('QVariant')
+	def otherUsers(self):
+		other = []
+		for username in Midtier.session._users.keys():
+			if username != Midtier.session._user:
+				other.append({'username':username,'name':Midtier.session._users[username]['displayName']})
+		print("userUsers="+str(other))
+		return other
 
 	@pyqtSlot()
 	def getSecrets(self):
@@ -350,6 +361,34 @@ class Midtier(QObject):
 				Midtier.session._passwordsModCounter += 1
 
 			self.sigNewPassword.emit(sid)
+		except Exception as e:
+			traceback.print_exc()
+			self.sigMessage.emit("")
+			self.error.emit(str(e))
+
+	@pyqtSlot(str,str)
+	def shareSecret(self,sid,username):
+		threading.Thread(target=(lambda: self._shareSecret(sid,username))).start()
+
+	def _shareSecret(self,sid,username):
+		try:
+			client = Midtier.session.client
+			self.sigMessage.emit("Downloading "+username+"'s public key")
+			pubKey = client.getUserPublicKey(username)
+			privKey = Midtier.session._privKey
+			self.sigMessage.emit("Downloading latest secret")
+			secretEntry = client.getSecret(sid)
+			encryptedKey = self.crypto.decode(secretEntry["users"][Midtier.session._user]["encryptedKey"])
+			self.sigMessage.emit("Decrypting the AES key")
+			origKeyPair = self.crypto.decryptRSA(privKey,encryptedKey)
+			origKey = origKeyPair[0:32]
+			hmacKey = origKeyPair[32:]
+			self.sigMessage.emit("Encrypting the AES key for "+username)
+			encryptedKey2 = self.crypto.encryptRSA(pubKey,origKey)
+			self.sigMessage.emit("Sharing the secret "+username)
+			client.shareSecret(sid,username,self.crypto.encode(encryptedKey2))
+			self.sigMessage.emit("Shared the secret "+username)
+
 		except Exception as e:
 			traceback.print_exc()
 			self.sigMessage.emit("")
@@ -451,6 +490,21 @@ class Midtier(QObject):
 			Midtier.session.client.login(Midtier.session._user,Midtier.session._password)
 			Midtier.session._encryptedPrivateKey = Midtier.session.client.getUserPrivateKey(Midtier.session._user,Midtier.session._password).decode('ascii')
 			self.sigDownloadKey.emit(Midtier.session._encryptedPrivateKey)
+		except Exception as e:
+			traceback.print_exc()
+			self.clearSession()
+			self.error.emit(str(e))
+
+	@pyqtSlot()
+	def listUsers(self):
+		print("listUsers()")
+		threading.Thread(target=(lambda: self._listUsers())).start()
+
+	def _listUsers(self):
+		try:
+			Midtier.session._users=Midtier.session.client.listUsers()
+			print("users="+str(Midtier.session._users))
+			self.sigUsersListed.emit()
 		except Exception as e:
 			traceback.print_exc()
 			self.clearSession()
