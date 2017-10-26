@@ -90,6 +90,7 @@ Item {
 
     PasswordModel {
         id: pmodel
+        filterString: filterInput.text
     }
 
     Rectangle {
@@ -98,7 +99,16 @@ Item {
         anchors.right: parent.right
         anchors.bottom: ( footer.visible ? footer.top : parent.bottom )
         anchors.margins: 10
+
+        MyTextInput {
+            id: filterInput
+            hint: "Filter"
+            width: parent.width
+            anchors.top: parent.top
+        }
+
         ListView {
+            anchors.topMargin: filterInput.height + 15
             anchors.fill: parent
             model: pmodel
             delegate: passwordDelegate

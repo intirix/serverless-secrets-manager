@@ -35,6 +35,17 @@ def makeSortString(d):
 	ret = ret.upper()
 	return ret
 
+def makeSearchString(d):
+	ret = ""
+	if "website" in d:
+		ret = " " + addField(ret,d,"website").replace("www.","")
+	elif "address" in d:
+		ret = " " + addField(ret,d,"address").replace("www.","")
+	ret = " " + addField(ret,d,"loginName")
+	ret = " " + addField(ret,d,"notes")
+	return ret.lower()
+
+
 class Session:
 
 	def __init__(self):
@@ -185,7 +196,11 @@ class PasswordModel(QAbstractListModel):
 		return len(self._getdata())
 
 	def data(self,index,role):
-		return self._getdata()[index.row()]
+		ret = self._getdata()[index.row()]
+		if role==1:
+			ret = makeSearchString(ret)
+		#print("data("+str(index.row())+","+str(role)+")="+str(ret))
+		return ret
 
 	def _getdata(self):
 		with Midtier.session._lock:
@@ -201,6 +216,16 @@ class MyProxyModel(QSortFilterProxyModel):
 		super().__init__(parent)
 		self.setSourceModel(PasswordModel(parent))
 		self.setDynamicSortFilter(True)
+		self.setFilterRegExp("")
+		self.setFilterRole(1)
+
+	@pyqtProperty('QString')
+	def filterString(self):
+		return self.filterRegExp().pattern()
+
+	@filterString.setter
+	def filterString(self, f):
+		self.setFilterRegExp(f.lower())
 
 class MyCategoryProxyModel(QSortFilterProxyModel):
 
