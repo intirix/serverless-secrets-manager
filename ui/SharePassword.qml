@@ -2,13 +2,9 @@ import QtQuick 2.0
 import CPMQ 1.0
 
 
-Rectangle {
+MyPage {
+    headerButtonState: "BACK"
     property string selectedSecret: ""
-
-    MyHeader {
-        id: header
-        backButtonEnabled: true
-    }
 
     ToastManager {
         id: toast
@@ -44,7 +40,7 @@ Rectangle {
     Text {
         id: heading
         text: "Select user to share with"
-        anchors.top: header.bottom
+        anchors.top: parent.top
         anchors.topMargin: 20
         color: "#3F51B5"
         font.pixelSize: 20

@@ -2,8 +2,8 @@ import QtQuick 2.0
 import CPMQ 1.0
 
 
-Item {
-
+MyPage {
+    headerButtonState: "NONE"
     Midtier {
         id: midtier
 
@@ -17,10 +17,6 @@ Item {
             console.log("Decrypted a secret, invalidating the model")
             pmodel.invalidate();
         }
-    }
-
-    MyHeader {
-        id: header
     }
 
     Rectangle {
@@ -94,7 +90,7 @@ Item {
     }
 
     Rectangle {
-        anchors.top: header.bottom
+        anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: ( footer.visible ? footer.top : parent.bottom )

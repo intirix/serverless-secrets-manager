@@ -1,8 +1,8 @@
 import QtQuick 2.0
 import CPMQ 1.0
 
-Item {
-
+MyPage {
+    headerButtonState: "MENU"
 
     Midtier {
         id: midtier
@@ -30,9 +30,6 @@ Item {
 
     Storage {
         id: storage
-    }
-
-    MyHeader {
     }
 
     Rectangle {
@@ -102,5 +99,17 @@ Item {
             anchors.right: login.right
             anchors.left: password.left
         }
+    }
+
+
+
+    /*
+    Stack.onStatusChanged: {
+        header.backButtonEnabled = false;
+        header.menuButtonEnabled = false;
+    }
+    */
+    Component.onCompleted: {
+        //console.log("Status="+Stack.status);
     }
 }

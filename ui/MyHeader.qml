@@ -9,16 +9,17 @@ Rectangle {
     anchors.right: parent.right
     anchors.margins: 10
     height: 40
-    property bool backButtonEnabled: false
+    property string buttonState: "NONE"
+    property string headerText: "Cloud Password Manager"
 
     Rectangle {
-        id: backButton
-        width: ( backButtonEnabled ? parent.height : parent.height / 2 )
+        id: leftButton
+        width: ( buttonState != "NONE" ? parent.height : parent.height / 2 )
         height: parent.height
         color: "Transparent"
         Text {
             color: "#FFFFFF"
-            text: ( backButtonEnabled ? "<" : "" )
+            text: ( buttonState == "BACK" ? "<" : ( buttonState == "MENU" ? "\u2630" : "" ) )
             font.pixelSize: 30
             anchors.fill: parent
             horizontalAlignment: Text.AlignHCenter
@@ -28,8 +29,14 @@ Rectangle {
             anchors.fill: parent
 
             onClicked: {
-                if (backButtonEnabled) {
+                if (buttonState=="BACK") {
                     stack.pop();
+                } else if (buttonState=="MENU") {
+                    if (menu.state=="OPEN") {
+                        menu.closeMenu();
+                    } else {
+                        menu.openMenu();
+                    }
                 }
             }
         }
@@ -37,10 +44,10 @@ Rectangle {
 
     Text {
         color: "#FFFFFF"
-        text: "Cloud Password Manager"
+        text: headerText
         font.pixelSize: 30
         anchors.verticalCenter: parent.verticalCenter
-        anchors.left: backButton.right
+        anchors.left: leftButton.right
     }
 }
 

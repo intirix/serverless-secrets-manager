@@ -12,20 +12,30 @@ Window {
         id: session
     }
 
+    MyHeader {
+        id: header
+        buttonState: stack.currentItem.headerButtonState
+    }
+
+    MyMenu {
+        id: menu
+        header: header
+    }
+
     StackView {
         id: stack
         initialItem: view
-        anchors.fill: parent
+        anchors.top: header.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
 
         Component {
             id: view
-
             Login {
-               // session: session
             }
         }
     }
-
 
 }
 

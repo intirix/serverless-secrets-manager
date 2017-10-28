@@ -358,10 +358,12 @@ class Midtier(QObject):
 			secretValue["password"]=obj["password"]
 			secretValue["type"]="password"
 			secretValue["category"]="0"
+			secretValue["userCategory"]={}
 			for cat in Midtier.session._categoriesList:
 				try:
 					if cat["text"]==obj["category"]:
 						secretValue["category"]=cat["id"]
+						secretValue["userCategory"][user]=cat["id"]
 				except:
 					pass
 			secretValue["notes"]=""
@@ -445,6 +447,9 @@ class Midtier(QObject):
 				origSecretText = self.crypto.decrypt(origKey,encryptedSecret)
 				origSecret = json.loads(origSecretText.decode('utf-8'))
 				origSecret["sid"]=key
+				if "userCategory" in origSecret and user in origSecret["userCategory"]:
+					origSecret=origSecret["userCategory"][user]
+
 				if "type" in origSecret:
 					if origSecret["type"]=="password":
 						with Midtier.session._lock:
@@ -484,8 +489,12 @@ class Midtier(QObject):
 		password["categoryBackground"]="Transparent"
 		password["categoryForeground"]="Transparent"
 
+		catInfo=None
 		if "category" in password and password["category"] in Midtier.session._categories:
 			catInfo = Midtier.session._categories[password["category"]]
+
+
+		if catInfo != None:
 			password["categoryBackground"]='#'+catInfo["backgroundColor"].upper()
 			password["categoryLabel"]=catInfo["label"]
 

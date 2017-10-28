@@ -3,12 +3,8 @@ import QtQuick.Controls 1.4
 import CPMQ 1.0
 
 
-Rectangle {
-
-    MyHeader {
-        id: header
-        backButtonEnabled: true
-    }
+MyPage {
+    headerButtonState: "BACK"
 
     ToastManager {
         id: toast
@@ -41,7 +37,7 @@ Rectangle {
     }
 
     Rectangle {
-        anchors.top: header.bottom
+        anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom

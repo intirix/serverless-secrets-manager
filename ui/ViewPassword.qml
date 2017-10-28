@@ -2,13 +2,9 @@ import QtQuick 2.0
 import CPMQ 1.0
 
 
-Rectangle {
+MyPage {
+    headerButtonState: "BACK"
     property string selectedSecret: ""
-
-    MyHeader {
-        id: header
-        backButtonEnabled: true
-    }
 
     ToastManager {
         id: toast
@@ -28,10 +24,7 @@ Rectangle {
     }
 
     Rectangle {
-        anchors.top: header.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
+        anchors.fill: parent
         anchors.margins: 10
 
         Text {
@@ -267,4 +260,5 @@ Rectangle {
 
 
     }
+
 }
