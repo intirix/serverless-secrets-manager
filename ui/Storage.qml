@@ -24,8 +24,8 @@ Item {
                 var rs = tx.executeSql('SELECT val FROM Storage WHERE key = ?', [key]);
                 console.log("Found "+rs.rows.length+" rows for "+key);
                 if (rs.rows.length===1) {
-                    console.log("Using stored value for "+key)
                     ret = rs.rows.item(0).val;
+                    //console.log("Using stored value "+ret+" for "+key)
                 }
             }
         );

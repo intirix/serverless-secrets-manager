@@ -77,6 +77,8 @@ MyPage {
                 midtier.user = username.text
                 midtier.password = password.text;
                 if (storage.hasItem("encryptedPrivateKey-"+username.text)) {
+                    storage.setItem('lastUrl', midtier.url);
+                    storage.setItem('lastUser', midtier.user);
                     midtier.encryptedPrivateKey = storage.getItem("encryptedPrivateKey-"+username.text,null);
                     console.log("Already have encrypted private key");
                     midtier.getSecrets();

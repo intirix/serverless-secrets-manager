@@ -12,6 +12,10 @@ Item {
             label: "Add Password"
             path: "AddPassword.qml"
         }
+        ListElement {
+            label: "Category List"
+            path: "CategoryList.qml"
+        }
     }
 
     ListView {
