@@ -3,7 +3,7 @@ import CPMQ 1.0
 
 
 MyPage {
-    headerButtonState: "NONE"
+    headerButtonState: "MENU"
     Midtier {
         id: midtier
 

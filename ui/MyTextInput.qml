@@ -29,7 +29,8 @@ Rectangle {
         text: ( input.text == '' ? hint : '' )
         height: parent.height
         width: parent.width - parent.radius * 2
-        horizontalAlignment: TextInput.AlignLeft | TextInput.AlignHCenter
+        horizontalAlignment: TextInput.AlignLeft
+        verticalAlignment: Text.AlignVCenter
         color: "#b8d0e3"
     }
     TextInput {

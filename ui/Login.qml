@@ -25,6 +25,7 @@ MyPage {
         onDownloadSecrets: {
             console.log("Loading "+qmlBasePath+"/PasswordList.qml")
             stack.push({item:qmlBasePath+"/PasswordList.qml"})
+            menu.loadMenu(qmlBasePath+"/UserMenu.qml");
         }
     }
 
@@ -102,14 +103,4 @@ MyPage {
     }
 
 
-
-    /*
-    Stack.onStatusChanged: {
-        header.backButtonEnabled = false;
-        header.menuButtonEnabled = false;
-    }
-    */
-    Component.onCompleted: {
-        //console.log("Status="+Stack.status);
-    }
 }

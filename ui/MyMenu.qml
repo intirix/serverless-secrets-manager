@@ -47,10 +47,16 @@ Rectangle {
         menu.state = "CLOSED";
     }
 
+    function loadMenu(path) {
+        console.log("Loading menu from "+path);
+        menuStack.push({item:path});
+    }
+
     Rectangle {
         id: leftNav
         width: menu.menuWidth
         height: parent.height
+        anchors.margins: 1
         color: "#3d557c"
 
         StackView {
