@@ -66,6 +66,7 @@ class Session:
 		self._categories = {}
 		self._categoriesList = []
 		self._users = {}
+		self._categorySid = None
 
 class PasswordInfo(QObject):
 	sigChanged = pyqtSignal(name="passwordInfoChanged")
@@ -393,6 +394,60 @@ class Midtier(QObject):
 			self.sigMessage.emit("")
 			self.error.emit(str(e))
 
+	@pyqtSlot(str)
+	def addCategory(self,value):
+		print("addCategory()")
+		threading.Thread(target=(lambda: self._addCategory(value))).start()
+		#Midtier.session._categorySid
+
+	def _addCategory(self,value):
+		try:
+			obj = json.loads(value)
+			print(str(obj))
+			sid = Midtier.session._categorySid
+			privKey = Midtier.session._privKey
+			if sid == None:
+				print("Creating category secret")
+			else:
+				client = Midtier.session.client
+				self.sigMessage.emit("Downloading latest secret")
+				secretEntry = client.getSecret(sid)
+				encryptedKey = self.crypto.decode(secretEntry["users"][Midtier.session._user]["encryptedKey"])
+				encryptedSecret = secretEntry["encryptedSecret"]
+
+				self.sigMessage.emit("Decrypting the AES key")
+				origKeyPair = self.crypto.decryptRSA(privKey,encryptedKey)
+				origKey = origKeyPair[0:32]
+				hmacKey = origKeyPair[32:]
+
+				self.sigMessage.emit("Decrypting the latest secret")
+				origSecretText = self.crypto.decrypt(origKey,encryptedSecret)
+				origSecret = json.loads(origSecretText.decode('utf-8'))
+
+				if "categories" in origSecret:
+					catIds=[]
+					catIds.extend(origSecret["categories"].keys())
+					catIds=sorted(catIds,key=lambda x:int(x))
+					catIds.reverse()
+					highest=catIds[0]
+					newId=str(int(highest)+1)
+					print("highest category is "+str(highest)+", new id is "+str(newId))
+					origSecret["categories"][newId]={}
+					origSecret["categories"][newId]["label"]=obj["label"]
+					origSecret["categories"][newId]["backgroundColor"]=str(obj["background"]).replace('#','')
+
+				else:
+					origSecret["categories"]={}
+					origSecret["categories"]["1"]={}
+					origSecret["categories"]["1"]["label"]=obj["label"]
+					origSecret["categories"]["1"]["backgroundColor"]=str(obj["background"]).replace('#','')
+				print(json.dumps(origSecret,indent=2))
+
+		except Exception as e:
+			traceback.print_exc()
+			self.sigMessage.emit("")
+			self.error.emit(str(e))
+
 	@pyqtSlot(str,str)
 	def shareSecret(self,sid,username):
 		threading.Thread(target=(lambda: self._shareSecret(sid,username))).start()
@@ -457,6 +512,7 @@ class Midtier(QObject):
 							Midtier.session._passwords.append(origSecret)
 							Midtier.session._passwordsModCounter += 1
 					elif origSecret["type"]=="passwordCategories":
+						Midtier.session._categorySid = origSecret["sid"]
 						print(json.dumps(origSecret,indent=2))
 						if "categories" in origSecret:
 							with Midtier.session._lock:
