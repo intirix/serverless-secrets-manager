@@ -91,7 +91,6 @@ MyPage {
         }
     }
 
-    /*
     Rectangle {
         width: 60
         height: width
@@ -114,5 +113,4 @@ MyPage {
             }
         }
     }
-    */
 }

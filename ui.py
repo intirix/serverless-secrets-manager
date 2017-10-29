@@ -465,7 +465,7 @@ class Midtier(QObject):
 								for catId in Midtier.session._categories.keys():
 									catObj = {"id": catId}
 									catObj["text"] = Midtier.session._categories[catId]["label"]
-									catObj["foreground"] = getForegroundColor(Midtier.session._categories[catId]["backgroundColor"])
+									catObj["foreground"] = self.getForegroundColor(Midtier.session._categories[catId]["backgroundColor"])
 									catObj["background"] = "#"+Midtier.session._categories[catId]["backgroundColor"]
 									Midtier.session._categoriesList.append(catObj)
 								for password in Midtier.session._passwords:
@@ -499,7 +499,7 @@ class Midtier(QObject):
 		if catInfo != None:
 			password["categoryBackground"]='#'+catInfo["backgroundColor"].upper()
 			password["categoryLabel"]=catInfo["label"]
-			password["categoryForeground"] = getForegroundColor(catInfo["backgroundColor"])
+			password["categoryForeground"] = self.getForegroundColor(catInfo["backgroundColor"])
 
 
 
@@ -558,17 +558,18 @@ class Midtier(QObject):
 		# Release the GIL
 		time.sleep(0.1)
 
-def getForegroundColor(bg):
-	# http://stackoverflow.com/questions/1855884/determine-font-color-based-on-background-color
-	# Counting the perceptive luminance - human eye favors green color...
-	r = 0.299 *int(bg[1:3],16)
-	g = 0.587 *int(bg[3:5],16)
-	b = 0.114 *int(bg[5:8],16)
-	a = 1.0 - ( ( r + g + b ) / 255.0 )
-	if a < 0.5:
-		return "#000000"
-	else:
-		return "#FFFFFF"
+	def getForegroundColor(self,bg):
+		# http://stackoverflow.com/questions/1855884/determine-font-color-based-on-background-color
+		# Counting the perceptive luminance - human eye favors green color...
+		bg = str(bg).replace('#','')
+		r = 0.299 *int(bg[1:3],16)
+		g = 0.587 *int(bg[3:5],16)
+		b = 0.114 *int(bg[5:8],16)
+		a = 1.0 - ( ( r + g + b ) / 255.0 )
+		if a < 0.5:
+			return "#000000"
+		else:
+			return "#FFFFFF"
 
 def sigint_handler(*args):
 	sys.stderr.write('\r')
