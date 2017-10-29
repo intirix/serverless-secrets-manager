@@ -245,6 +245,7 @@ class Midtier(QObject):
 	sigDownloadSecrets = pyqtSignal(name="downloadSecrets")
 	sigDecryptedSecret = pyqtSignal(dict,name="decryptedSecret")
 	sigNewPassword = pyqtSignal(str,name="newPassword",arguments=["sid"])
+	sigNewCategory = pyqtSignal(str,name="newCategory",arguments=["cid"])
 	sigUsersListed = pyqtSignal(name="usersListed")
 
 	def __init__(self, parent=None):
@@ -405,9 +406,39 @@ class Midtier(QObject):
 			obj = json.loads(value)
 			print(str(obj))
 			sid = Midtier.session._categorySid
+			user = Midtier.session._user
 			privKey = Midtier.session._privKey
+			self.sigMessage.emit("Downloading public key")
+			pubKey = Midtier.session.client.getUserPublicKey(user)
 			if sid == None:
 				print("Creating category secret")
+				self.sigMessage.emit("Generating random keys")
+				self._yield()
+				aesKey = self.crypto.generateRandomKey()
+				hmacKey = self.crypto.generateRandomKey()
+				bothKeys = aesKey + hmacKey
+				rnd = self.crypto.encode(self.crypto.generateRandomKey())
+				secretValue={}
+				secretValue["type"]="passwordCategories"
+				secretValue["categories"]={}
+				secretValue["categories"]["1"]={}
+				secretValue["categories"]["1"]["label"]=obj["label"]
+				secretValue["categories"]["1"]["backgroundColor"]=str(obj["background"]).replace('#','')
+				self.sigMessage.emit("Encrypting category")
+				self._yield()
+				encryptedSecret = self.crypto.encrypt(aesKey,json.dumps(secretValue))
+				encryptedKey = self.crypto.encryptRSA(pubKey,bothKeys)
+				hmac = str(self.crypto.createHmac(hmacKey,encryptedSecret))
+				eek = str(self.crypto.encode(encryptedKey))
+				self.sigMessage.emit("Uploading encrypted category")
+				self._yield()
+				secret = Midtier.session.client.addSecret(user,"1",eek,encryptedSecret.decode("utf-8") ,hmac)
+				Midtier.session._categorySid = secret["sid"]
+				print("New category sid: "+secret["sid"])
+
+				with Midtier.session._lock:
+					self._updateCategoryList(secretValue)
+				self.sigNewCategory.emit("1")
 			else:
 				client = Midtier.session.client
 				self.sigMessage.emit("Downloading latest secret")
@@ -424,6 +455,7 @@ class Midtier(QObject):
 				origSecretText = self.crypto.decrypt(origKey,encryptedSecret)
 				origSecret = json.loads(origSecretText.decode('utf-8'))
 
+				newId="1"
 				if "categories" in origSecret:
 					catIds=[]
 					catIds.extend(origSecret["categories"].keys())
@@ -441,7 +473,23 @@ class Midtier(QObject):
 					origSecret["categories"]["1"]={}
 					origSecret["categories"]["1"]["label"]=obj["label"]
 					origSecret["categories"]["1"]["backgroundColor"]=str(obj["background"]).replace('#','')
-				print(json.dumps(origSecret,indent=2))
+
+				self.sigMessage.emit("Encrypting categories")
+				self._yield()
+				encryptedSecret = self.crypto.encrypt(origKey,json.dumps(origSecret))
+				hmac = str(self.crypto.createHmac(hmacKey,encryptedSecret))
+				self.sigMessage.emit("Uploading encrypted categories")
+				self._yield()
+				client.updateSecret(sid,encryptedSecret.decode("utf-8"),hmac)
+				self.sigMessage.emit("Uploaded encrypted categories")
+
+				with Midtier.session._lock:
+					self._updateCategoryList(origSecret)
+				self.sigNewCategory.emit(newId)
+
+
+
+
 
 		except Exception as e:
 			traceback.print_exc()
@@ -516,16 +564,7 @@ class Midtier(QObject):
 						print(json.dumps(origSecret,indent=2))
 						if "categories" in origSecret:
 							with Midtier.session._lock:
-								Midtier.session._categories = origSecret["categories"]
-								Midtier.session._categoriesList = []
-								for catId in Midtier.session._categories.keys():
-									catObj = {"id": catId}
-									catObj["text"] = Midtier.session._categories[catId]["label"]
-									catObj["foreground"] = self.getForegroundColor(Midtier.session._categories[catId]["backgroundColor"])
-									catObj["background"] = "#"+Midtier.session._categories[catId]["backgroundColor"]
-									Midtier.session._categoriesList.append(catObj)
-								for password in Midtier.session._passwords:
-									self.updatePasswordCategoryInfo(password)
+								self._updateCategoryList(origSecret)
 				else:
 					print(json.dumps(origSecret,indent=2))
 				self.sigDecryptedSecret.emit(origSecret)
@@ -541,6 +580,18 @@ class Midtier(QObject):
 			self.sigMessage.emit("Failed to deccrypt "+str(failed)+" secrets")
 		else:
 			self.sigMessage.emit("")
+
+	def _updateCategoryList(self,origSecret):
+		Midtier.session._categories = origSecret["categories"]
+		Midtier.session._categoriesList = []
+		for catId in Midtier.session._categories.keys():
+			catObj = {"id": catId}
+			catObj["text"] = Midtier.session._categories[catId]["label"]
+			catObj["foreground"] = self.getForegroundColor(Midtier.session._categories[catId]["backgroundColor"])
+			catObj["background"] = "#"+Midtier.session._categories[catId]["backgroundColor"]
+			Midtier.session._categoriesList.append(catObj)
+		for password in Midtier.session._passwords:
+			self.updatePasswordCategoryInfo(password)
 
 	def updatePasswordCategoryInfo(self,password):
 		password["categoryLabel"]="Unknown"

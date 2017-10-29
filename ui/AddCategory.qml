@@ -19,7 +19,7 @@ MyPage {
         onError: {
             toast.show(error,3000);
         }
-        onNewPassword: {
+        onNewCategory: {
             stack.push({item:qmlBasePath+"/CategoryList.qml",replace: true})
         }
     }
