@@ -48,7 +48,7 @@ MyPage {
                 id: labelWebsite
                 anchors.top: parent.top
                 font.pixelSize: 20
-                text: ""+model.display.website
+                text: ""+(model.display.website==''?model.display.address:model.display.website)
             }
             Rectangle {
                 height: labelCategory.implicitHeight + 4

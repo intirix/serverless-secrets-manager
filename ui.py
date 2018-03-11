@@ -25,12 +25,13 @@ def addField(v,d,field):
 
 def makeSortString(d):
 	ret = ""
-	if "website" in d:
+	if "website" in d and len(d["website"])>0:
 		ret = addField(ret,d,"website").replace("www.","")
-	elif "address" in d:
+	elif "address" in d and len(d["address"])>0:
 		ret = addField(ret,d,"address").replace("www.","")
 	else:
 		ret = "zzz_"
+	ret = ret + "  __  "
 	ret = addField(ret,d,"loginName")
 	ret = ret.upper()
 	return ret
@@ -39,7 +40,7 @@ def makeSearchString(d):
 	ret = ""
 	if "website" in d:
 		ret = " " + addField(ret,d,"website").replace("www.","")
-	elif "address" in d:
+	if "address" in d:
 		ret = " " + addField(ret,d,"address").replace("www.","")
 	ret = " " + addField(ret,d,"loginName")
 	ret = " " + addField(ret,d,"notes")
@@ -89,6 +90,13 @@ class PasswordInfo(QObject):
 				self.sigChanged.emit()
 
 	@pyqtProperty('QString',notify=sigChanged)
+	def category(self):
+		try:
+			return str(self._password["category"])
+		except:
+			return "0"
+
+	@pyqtProperty('QString',notify=sigChanged)
 	def categoryLabel(self):
 		try:
 			return self._password["categoryLabel"]
@@ -110,18 +118,31 @@ class PasswordInfo(QObject):
 			return "#FFFFFF"
 
 	@pyqtProperty('QString',notify=sigChanged)
+	def displayName(self):
+		try:
+			return self._password["displayName"]
+		except:
+			return ""
+
+	@pyqtProperty('QString',notify=sigChanged)
 	def website(self):
 		try:
 			return self._password["website"]
 		except:
-			return ""
+			try:
+				return self._password["address"]
+			except:
+				return ""
 
 	@pyqtProperty('QString',notify=sigChanged)
 	def address(self):
 		try:
 			return self._password["address"]
 		except:
-			return self.website()
+			try:
+				return self._password["website"]
+			except:
+				return ""
 
 	@pyqtProperty(bool,notify=sigChanged)
 	def passwordHasNumbers(self):
@@ -356,6 +377,9 @@ class Midtier(QObject):
 			secretValue["random"]=rnd
 			secretValue["website"]=obj["website"]
 			secretValue["address"]=obj["url"]
+			secretValue["displayName"]=secretValue["website"]
+			if len(secretValue["website"])==0:
+				secretValue["displayName"]=secretValue["address"]
 			secretValue["loginName"]=obj["username"]
 			secretValue["password"]=obj["password"]
 			secretValue["type"]="password"
