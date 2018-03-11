@@ -30,7 +30,7 @@ MyPage {
         Text {
             id: website
             font.pixelSize: 30
-            text: pi.website
+            text: (pi.website==''?pi.address:pi.website)
             anchors.top: parent.top
             anchors.topMargin: 5
         }
@@ -246,6 +246,7 @@ MyPage {
 
 
         Text {
+            id: shareButton
             text: "Share"
             anchors.bottom: parent.bottom
             anchors.right: parent.right
@@ -253,6 +254,19 @@ MyPage {
                 anchors.fill: parent
                 onClicked: {
                     stack.push({item:qmlBasePath+"/SharePassword.qml",properties: {selectedSecret: selectedSecret}})
+                }
+            }
+        }
+
+        Text {
+            text: "Edit"
+            anchors.bottom: parent.bottom
+            anchors.right: shareButton.left
+            anchors.rightMargin: 20
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    stack.push({item:qmlBasePath+"/EditPassword.qml",properties: {selectedSecret: selectedSecret}})
                 }
             }
         }

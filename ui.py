@@ -84,7 +84,7 @@ class PasswordInfo(QObject):
 		print("Setting sid="+sid)
 		self._sid = sid
 		for password in Midtier.session._passwords:
-			if sid == password["sid"]:
+			if "sid" in password and sid == password["sid"]:
 				self._password = password
 				print("Emitting changed signal")
 				self.sigChanged.emit()
@@ -266,6 +266,7 @@ class Midtier(QObject):
 	sigDownloadSecrets = pyqtSignal(name="downloadSecrets")
 	sigDecryptedSecret = pyqtSignal(dict,name="decryptedSecret")
 	sigNewPassword = pyqtSignal(str,name="newPassword",arguments=["sid"])
+	sigUpdatedPassword = pyqtSignal(str,name="updatedPassword",arguments=["sid"])
 	sigNewCategory = pyqtSignal(str,name="newCategory",arguments=["cid"])
 	sigUsersListed = pyqtSignal(name="usersListed")
 
@@ -377,9 +378,6 @@ class Midtier(QObject):
 			secretValue["random"]=rnd
 			secretValue["website"]=obj["website"]
 			secretValue["address"]=obj["url"]
-			secretValue["displayName"]=secretValue["website"]
-			if len(secretValue["website"])==0:
-				secretValue["displayName"]=secretValue["address"]
 			secretValue["loginName"]=obj["username"]
 			secretValue["password"]=obj["password"]
 			secretValue["type"]="password"
@@ -393,7 +391,7 @@ class Midtier(QObject):
 				except:
 					pass
 			secretValue["notes"]=""
-			secretValue["dateChanges"]=datetime.date.today().isoformat()
+			secretValue["dateChanged"]=datetime.date.today().isoformat()
 			self.sigMessage.emit("Encrypting password")
 			self._yield()
 			encryptedSecret = self.crypto.encrypt(aesKey,json.dumps(secretValue))
@@ -414,6 +412,85 @@ class Midtier(QObject):
 				Midtier.session._passwordsModCounter += 1
 
 			self.sigNewPassword.emit(sid)
+		except Exception as e:
+			traceback.print_exc()
+			self.sigMessage.emit("")
+			self.error.emit(str(e))
+
+	@pyqtSlot(str,str)
+	def updatePassword(self,sid,value):
+		print("updatePassword()")
+		threading.Thread(target=(lambda: self._updatePassword(sid,value))).start()
+
+	def _updatePassword(self,sid,value):
+		try:
+			obj = json.loads(value)
+			print(str(obj))
+			user = Midtier.session._user
+			privKey = Midtier.session._privKey
+
+			self.sigMessage.emit("Downloading public key")
+			self._yield()
+			pubKey = Midtier.session.client.getUserPublicKey(user)
+			self.sigMessage.emit("Downloading latest secret")
+			self._yield()
+			secretEntry = Midtier.session.client.getSecret(sid)
+			encryptedKey = self.crypto.decode(secretEntry["users"][Midtier.session._user]["encryptedKey"])
+			encryptedSecret = secretEntry["encryptedSecret"]
+
+			self.sigMessage.emit("Decrypting the AES key")
+			origKeyPair = self.crypto.decryptRSA(privKey,encryptedKey)
+			origKey = origKeyPair[0:32]
+			hmacKey = origKeyPair[32:]
+
+
+			origSecretText = self.crypto.decrypt(origKey,encryptedSecret)
+			origSecret = json.loads(origSecretText.decode('utf-8'))
+			secretValue = origSecret
+
+
+			secretValue["website"]=obj["website"]
+			secretValue["address"]=obj["url"]
+			secretValue["loginName"]=obj["username"]
+
+			if secretValue["password"] != obj["password"]:
+				secretValue["password"]=obj["password"]
+				secretValue["dateChanged"]=datetime.date.today().isoformat()
+
+			for cat in Midtier.session._categoriesList:
+				try:
+					if cat["text"]==obj["category"]:
+						secretValue["category"]=cat["id"]
+						secretValue["userCategory"][user]=cat["id"]
+				except:
+					pass
+
+			self.sigMessage.emit("Encrypting password")
+			self._yield()
+			encryptedSecret = self.crypto.encrypt(origKey,json.dumps(secretValue))
+			hmac = str(self.crypto.createHmac(hmacKey,encryptedSecret))
+
+			self.sigMessage.emit("Uploading encrypted secret")
+			self._yield()
+			Midtier.session.client.updateSecret(sid,encryptedSecret.decode("utf-8"),hmac)
+			self.sigMessage.emit("Uploaded encrypted secret")
+
+			self.sigMessage.emit("Updating information")
+			with Midtier.session._lock:
+				for password in Midtier.session._passwords:
+					if if "sid" in password and password["sid"] == sid:
+						self.updatePasswordCategoryInfo(password)
+						password["website"]=obj["website"]
+						password["address"]=obj["url"]
+						password["loginName"]=obj["username"]
+
+						password["password"]=obj["password"]
+						if "dateChanged" in secretValue:
+							password["dateChanged"]=secretValue["dateChanged"]
+				Midtier.session._passwords.append(secretValue)
+				Midtier.session._passwordsModCounter += 1
+			self.sigUpdatedPassword.emit(sid)
+
 		except Exception as e:
 			traceback.print_exc()
 			self.sigMessage.emit("")
@@ -574,8 +651,10 @@ class Midtier(QObject):
 				origSecretText = self.crypto.decrypt(origKey,encryptedSecret)
 				origSecret = json.loads(origSecretText.decode('utf-8'))
 				origSecret["sid"]=key
+				# If the secret has the new format where each user specifies the category in a dict:
 				if "userCategory" in origSecret and user in origSecret["userCategory"]:
-					origSecret=origSecret["userCategory"][user]
+					#print("before transform: "+json.dumps(origSecret,indent=2))
+					origSecret["category"]=origSecret["userCategory"][user]
 
 				if "type" in origSecret:
 					if origSecret["type"]=="password":
