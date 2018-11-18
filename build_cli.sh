@@ -16,6 +16,10 @@ workspace="$( dirname $0 )"
 		$VENV/bin/pip install -r requirements.cli.txt
 	fi
 
+	if [ ! -e $VENV/bin/pyinstaller ]
+	then
+		$VENV/bin/pip install pyinstaller
+	fi
 	if [ ! -e $VENV/bin/coverage ]
 	then
 		$VENV/bin/pip install coverage
@@ -28,5 +32,6 @@ workspace="$( dirname $0 )"
 		$VENV/bin/coverage run -a --omit=$VENV/*,*_test.py $x
 	done
 	$VENV/bin/coverage report
+	$VENV/bin/pyinstaller cli-single.spec
 
 )
