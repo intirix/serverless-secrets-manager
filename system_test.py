@@ -71,7 +71,7 @@ class TestSystem(unittest.TestCase):
 
 
 		print("storedHmacKey="+str(storedHmacKey))
-		print("storedHmac="+str(storedHmac))
+		#print("storedHmac="+str(storedHmac))
 		print("storedEncryptedSecret="+str(storedEncryptedSecret))
 
 		self.assertEqual(True,obj.crypto.verifyHmac(storedHmacKey,storedEncryptedSecret,storedHmac))

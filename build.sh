@@ -8,6 +8,12 @@ workspace="$( dirname $0 )"
 	cd "$workspace"
 	workspace="$(pwd)"
 
+	if [ ! -e .contents ]
+	then
+		virtualenv .contents
+		.contents/bin/pip install -r requirements.txt
+	fi
+
 	.contents/bin/coverage erase
 	for x in *_test.py
 	do

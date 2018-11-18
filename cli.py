@@ -9,6 +9,9 @@ import logging
 import getpass
 import crypto
 import json
+import appdirs
+import ConfigParser
+import os
 from datetime import datetime
 
 class CLI:
@@ -31,8 +34,13 @@ class CLI:
 		print("  -j - json database - Path to the local JSON database")
 		print("  -p - password - Password used to decrypt")
 		print("  -u [username] - user to log in a")
+		print("  -c - save config for later")
 		print("")
 		print("Commands:")
+		print("  save-config")
+		print("    Save the configuration to make it easier to call the CLI later")
+		print("    This is the same as the -c option with no action")
+		print("")
 		print("  list-users")
 		print("    Lists users")
 		print("")
@@ -93,36 +101,74 @@ class CLI:
 		print("    Generate a token that can be used as a basic auth password")
 		print("")
 
-	def parse(self):
+	def parseConfig(self):
 
-		optlist, self.args = getopt.getopt(self.args, 'du:k:b:s:t:p:j:')
 
-		self.mode = "rest"
-		self.user = "admin"
-		self.baseurl = None
-		self.privateKeyFile = None
+		try:
+			self.mode = self.config.get("server","mode")
+		except:
+			self.mode = "rest"
+		try:
+			self.user = self.config.get("server","user")
+		except:
+			self.user = "admin"
+		try:
+			self.baseurl = self.config.get("server","baseurl")
+		except:
+			self.baseurl = None
+
+		try:
+			self.privateKeyFile = self.config.get("server","privateKeyFile")
+		except:
+			self.privateKeyFile = None
+		try:
+			self.secretsTable = self.config.get("server","secretsTable")
+		except:
+			self.secretsTable = None
+		try:
+			self.usersTable = self.config.get("server","usersTable")
+		except:
+			self.usersTable = None
+		try:
+			self.jsonPath = self.config.get("server","jsonPath")
+		except:
+			self.jsonPath = None
+
 		self.privateKey = None
-		self.secretsTable = None
-		self.usersTable = None
-		self.jsonPath = None
+
+	def parse(self):
+		self.parseConfig()
+
+		optlist, self.args = getopt.getopt(self.args, 'du:k:b:s:t:p:j:c')
+
+		saveConfig = False
 
 		for o, a in optlist:
 			if o=='-d':
 				self.mode = "direct"
+				self.config.set("server","mode","direct")
 			elif o=='-u':
 				self.user = a
+				self.config.set("server","user",a)
 			elif o=='-b':
 				self.baseurl = a
+				self.config.set("server","baseurl",a)
 			elif o=='-k':
 				self.privateKeyFile = a
+				self.config.set("server","privateKeyFile",a)
 			elif o=='-s':
 				self.secretsTable = a
+				self.config.set("server","secretsTable",a)
 			elif o=='-t':
 				self.usersTable = a
+				self.config.set("server","usersTable",a)
 			elif o=='-p':
 				self.password = a
 			elif o=='-j':
 				self.jsonPath = a
+				self.config.set("server","jsonPath",a)
+			elif o=='-c':
+				saveConfig = True
 			else:
 				assert False, "unhandled option"
 
@@ -130,8 +176,31 @@ class CLI:
 			self.help()
 			sys.exit(1)
 
-	def init(self):
+		if saveConfig:
+			self.saveConfig(False)
 
+	def initUserConfig(self):
+                self.userConfigDir = appdirs.user_data_dir("ServerLessSecretsManagerCLi","intirix")
+		self.userConfigFile = self.userConfigDir+"/userConfig.ini"
+		self.config = ConfigParser.SafeConfigParser()
+		if os.path.exists(self.userConfigFile):
+			self.config.read(self.userConfigFile)
+		if not self.config.has_section("server"):
+			self.config.add_section("server")
+
+
+	def saveConfig(self,verbose=False):
+		if not os.path.exists(self.userConfigDir):
+			if verbose:
+				print("Creating directory "+self.userConfigDir)
+			os.makedirs(self.userConfigDir)
+		if verbose:
+			print("Writing configuration to "+self.userConfigFile)
+		with open(self.userConfigFile, 'wb') as configfile:
+			self.config.write(configfile)
+
+
+	def init(self):
 		if self.mode == 'direct':
 			if self.system == None:
 				self.system = system.System()
@@ -159,8 +228,10 @@ class CLI:
 			self.client.login(self.user,"")
 		else:
 			if self.privateKeyFile==None:
+				print("Logging in with password")
 				self.client.login(self.user,self.getPassword())
 			else:
+				print("Logging in with private key")
 				authToken = self.helper.generateToken(self.getPrivateKey())
 				self.client.login(self.user,authToken)
 
@@ -191,6 +262,9 @@ class CLI:
 			print("")
 			for user in self.client.listUsers():
 				print(user)
+		elif command == "save-config":
+			print("Saving configuration")
+			self.saveConfig(True)
 		elif command == "add-user":
 			if len(self.args)==0:
 				self.help()
@@ -457,6 +531,7 @@ if __name__ == "__main__":
 	logging.basicConfig(format=FORMAT)
 	logger = logging.getLogger('')
 	cli = CLI(sys.argv[1:])
+	cli.initUserConfig()
 	cli.parse()
 	cli.init()
 	cli.login()
