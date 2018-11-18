@@ -12,6 +12,7 @@ import json
 import appdirs
 import ConfigParser
 import os
+import shutil
 from datetime import datetime
 
 class CLI:
@@ -97,6 +98,10 @@ class CLI:
 		print("      filename - Filename to write the private key to")
 		print("        optional - if left out, the private key will be written to the console")
 		print("")
+		print("  import-my-encrypted-private-key <filename>")
+		print("    Import your encrypted private key so the CLI can use it more easily")
+		print("      filename - Filename to write the private key to")
+		print("")
 		print("  generate-auth-token")
 		print("    Generate a token that can be used as a basic auth password")
 		print("")
@@ -180,7 +185,7 @@ class CLI:
 			self.saveConfig(False)
 
 	def initUserConfig(self):
-                self.userConfigDir = appdirs.user_data_dir("ServerLessSecretsManagerCLi","intirix")
+                self.userConfigDir = appdirs.user_data_dir("ServerLessSecretsManagerCLI","intirix")
 		self.userConfigFile = self.userConfigDir+"/userConfig.ini"
 		self.config = ConfigParser.SafeConfigParser()
 		if os.path.exists(self.userConfigFile):
@@ -511,6 +516,20 @@ class CLI:
 				f = open(filename,"w")
 				f.write(privKey)
 				f.close()
+
+		elif command == "import-my-encrypted-private-key":
+			if len(self.args)==0:
+				self.help()
+				raise Exception("Expected argument <filename>")
+			filename = self.args[0]
+			configKey = self.userConfigDir+"/"+self.user+".key"
+			if not os.path.exists(self.userConfigDir):
+				os.makedirs(self.userConfigDir)
+			print("Copying "+filename+" to "+configKey)
+			shutil.copyfile(filename,configKey)
+			self.privateKeyFile = configKey
+			self.config.set("server","privateKeyFile",configKey)
+			self.saveConfig(True)
 
 		elif command == "generate-auth-token":
 			if self.mode == 'direct':
