@@ -118,6 +118,9 @@ class CLI:
 		print("    Find a password based on the text")
 		print("      text - text to search for")
 		print("")
+		print("  get-password-categories")
+		print("    Get all the password categories")
+		print("")
 
 	def parseConfig(self):
 
@@ -275,6 +278,13 @@ class CLI:
 				self.privateKey = self.client.getUserPrivateKey(self.user,self.getPassword())
 		return self.privateKey
 
+	def readLine(self,msg):
+		if sys.version_info.major == 3:
+			return input(msg)
+		else:
+			return raw_input(msg)
+
+
 	def run(self):
 
 		command = self.args[0]
@@ -317,30 +327,20 @@ class CLI:
 					f = open(sf,"r")
 					secretValues.append(json.load(f))
 					f.close()
+			self.addSecrets(secretValues)
 
-			pubKey = self.client.getUserPublicKey(self.user)
-			for secretValue in secretValues:
-				aesKey = self.crypto.generateRandomKey()
-				hmacKey = self.crypto.generateRandomKey()
+		elif command == "create-password":
+			secret = {}
 
-				bothKeys = aesKey + hmacKey
+			secret["type"] = "password"
+			secret["website"] = self.readLine("Website:")
+			secret["address"] = secret["website"]
+			secret["loginName"] = self.readLine("Username:")
+			secret["password"] = getpass.getpass("User's New Password:")
+			secret["dateChanges"] = datetime.now().strftime("%Y-%m-%d")
+			secret["notes"] = ""
 
-				# I don't want to just encrypt {}, I want some randomness in there
-				rnd = self.crypto.encode(self.crypto.generateRandomKey())
-				secretValue["random"]=rnd
-
-				# Encrypt an empty secret for now
-				encryptedSecret = self.crypto.encrypt(aesKey,json.dumps(secretValue))
-				encryptedKey = self.crypto.encryptRSA(pubKey,bothKeys)
-
-				hmac = self.crypto.createHmac(hmacKey,encryptedSecret)
-
-				eek = self.crypto.encode(encryptedKey)
-
-				secret = self.client.addSecret(self.user,"1",eek,encryptedSecret,hmac)
-				sid = secret["sid"]
-
-				print("Secret ID: "+str(sid))
+			self.addSecrets([secret])
 
 		elif command == "get-secret":
 			if len(self.args)==0:
@@ -395,11 +395,13 @@ class CLI:
 					if sys.version_info.major == 3 and type(origSecretText)==bytes:
 						origSecretText = origSecretText.decode('utf-8')
 					origSecret = json.loads(origSecretText)
+					origSecret["sid"]=sid
 					del origSecret["random"]
 					secrets[sid]=origSecret
 				else:
 					print("Secret verification failed for "+sid)
 
+			print(json.dumps(secrets,indent=2))
 
 		elif command == "find-password":
 
@@ -441,6 +443,42 @@ class CLI:
 				else:
 					print("Secret verification failed for "+sid)
 
+		elif command == "get-password-categories":
+
+			privKey = self.getPrivateKey()
+			secretEntries = self.client.getSecretsForUser(self.user)
+
+			categories = []
+
+			for sid in secretEntries.keys():
+				secretEntry = secretEntries[sid]
+				encryptedKey = self.crypto.decode(secretEntry["users"][self.user]["encryptedKey"])
+				storedHmac = secretEntry["hmac"]
+				storedEncryptedSecret = secretEntry["encryptedSecret"]
+
+				origKeyPair = self.crypto.decryptRSA(privKey,encryptedKey)
+				origKey = origKeyPair[0:32]
+				hmacKey = origKeyPair[32:]
+
+				if self.crypto.verifyHmac(hmacKey,storedEncryptedSecret,storedHmac):
+
+					origSecretText = self.crypto.decrypt(origKey,storedEncryptedSecret)
+					if sys.version_info.major == 3 and type(origSecretText)==bytes:
+						origSecretText = origSecretText.decode('utf-8')
+					origSecret = json.loads(origSecretText)
+					if origSecret["type"]=="passwordCategories":
+						print("Found password categories")
+						for cid in origSecret["categories"].keys():
+							label = origSecret["categories"][cid]["label"]
+							categories.append(label+" - "+cid)
+
+				else:
+					print("Secret verification failed for "+sid)
+
+			print("")
+			categories.sort()
+			print("\n".join(categories))
+
 
 		elif command == "set-secret-field":
 			if len(self.args)==0:
@@ -475,7 +513,7 @@ class CLI:
 			# Prompt for the password before prompting for the value
 			password = self.getPassword()
 
-			sid = self.findPassword(self.args[0])
+			sid = self.findSid(self.args[0])
 
 			# Get the value after getting the password
 			value = None
@@ -485,6 +523,7 @@ class CLI:
 				value = getpass.getpass("Value:")
 
 			self.setFieldValue(sid,"password",value)
+			self.setFieldValue(sid,"dateChanges",datetime.now().strftime("%Y-%m-%d"))
 
 
 		elif command == "share-secret":
@@ -658,6 +697,31 @@ class CLI:
 							return sid
 
 		return value
+
+	def addSecrets(self,secretValues):
+		pubKey = self.client.getUserPublicKey(self.user)
+		for secretValue in secretValues:
+			aesKey = self.crypto.generateRandomKey()
+			hmacKey = self.crypto.generateRandomKey()
+
+			bothKeys = aesKey + hmacKey
+
+			# I don't want to just encrypt {}, I want some randomness in there
+			rnd = self.crypto.encode(self.crypto.generateRandomKey())
+			secretValue["random"]=rnd
+
+			# Encrypt an empty secret for now
+			encryptedSecret = self.crypto.encrypt(aesKey,json.dumps(secretValue))
+			encryptedKey = self.crypto.encryptRSA(pubKey,bothKeys)
+
+			hmac = self.crypto.createHmac(hmacKey,encryptedSecret)
+
+			eek = self.crypto.encode(encryptedKey)
+
+			secret = self.client.addSecret(self.user,"1",eek,encryptedSecret,hmac)
+			sid = secret["sid"]
+
+			print("Secret ID: "+str(sid))
 
 
 if __name__ == "__main__":
