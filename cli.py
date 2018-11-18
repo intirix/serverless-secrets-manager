@@ -13,6 +13,7 @@ import appdirs
 import ConfigParser
 import os
 import shutil
+import base64
 from datetime import datetime
 
 class CLI:
@@ -73,6 +74,11 @@ class CLI:
 		print("      fieldName - name of the field to set")
 		print("      value - value to set")
 		print("        optional - will prompt for value if not provided")
+		print("")
+		print("  change-password <secretID> [password]")
+		print("    Alias for: set-secret-field <secretID> password <value>")
+		print("      secretID - ID of the secret")
+		print("      password - value to set")
 		print("")
 		print("  share-secret <secretID> <user>")
 		print("    Share a secret with another user")
@@ -236,8 +242,13 @@ class CLI:
 				print("Logging in with password")
 				self.client.login(self.user,self.getPassword())
 			else:
-				print("Logging in with private key")
-				authToken = self.helper.generateToken(self.getPrivateKey())
+				authToken = None
+				if "SLSM_AUTH" in os.environ:
+					print("Logging in with saved session")
+					authToken = base64.b64encode(os.environ["SLSM_AUTH"])
+				if authToken == None:
+					print("Logging in with private key")
+					authToken = self.helper.generateToken(self.getPrivateKey())
 				self.client.login(self.user,authToken)
 
 	def getPassword(self):
@@ -408,34 +419,27 @@ class CLI:
 			else:
 				value = getpass.getpass("Value:")
 
+			self.setFieldValue(sid,fieldName,value)
 
-			# First decrypt
-			privKey = self.getPrivateKey()
-			secretEntry = self.client.getSecret(sid)
+		elif command == "change-password":
+			if len(self.args)==0:
+				self.help()
+				raise Exception("Expected arguments <secretID>")
+			sid = self.args[0]
+
+			# Prompt for the password before prompting for the value
+			password = self.getPassword()
 
 
-			encryptedKey = self.crypto.decode(secretEntry["users"][self.user]["encryptedKey"])
-			origKeyPair = self.crypto.decryptRSA(privKey,encryptedKey)
-			origKey = origKeyPair[0:32]
-			hmacKey = origKeyPair[32:]
-			storedHmac = secretEntry["hmac"]
-			storedEncryptedSecret = secretEntry["encryptedSecret"]
+			# Get the value after getting the password
+			value = None
+			if len(self.args)==3:
+				value = self.args[2]
+			else:
+				value = getpass.getpass("Value:")
 
-			if not self.crypto.verifyHmac(hmacKey,storedEncryptedSecret,storedHmac):
-				raise(Exception("Secret verification failed!"))
+			self.setFieldValue(sid,"password",value)
 
-			aesKey = self.crypto.decryptRSA(privKey,encryptedKey)
-			origSecretText = self.crypto.decrypt(aesKey,storedEncryptedSecret)
-			origSecret = json.loads(origSecretText)
-
-			# Set the value
-			origSecret[fieldName] = value
-			
-			# Encrypt the secret
-			encryptedSecret = self.crypto.encrypt(aesKey,json.dumps(origSecret))
-			hmac = self.crypto.createHmac(hmacKey,encryptedSecret)
-
-			self.client.updateSecret(sid,encryptedSecret,hmac)
 
 		elif command == "share-secret":
 			if len(self.args)==0:
@@ -540,9 +544,39 @@ class CLI:
 				else:
 					authToken = self.helper.generateToken(self.getPrivateKey())
 					print("AuthToken: "+authToken)
+					print("")
+					print("export SLSM_AUTH="+base64.b64encode(authToken).decode('utf-8'))
 		else:
 			self.help()
 			raise Exception("Unknown command: "+command)
+
+	def setFieldValue(self,sid,fieldName,value):
+		# First decrypt
+		privKey = self.getPrivateKey()
+		secretEntry = self.client.getSecret(sid)
+
+		encryptedKey = self.crypto.decode(secretEntry["users"][self.user]["encryptedKey"])
+		origKeyPair = self.crypto.decryptRSA(privKey,encryptedKey)
+		origKey = origKeyPair[0:32]
+		hmacKey = origKeyPair[32:]
+		storedHmac = secretEntry["hmac"]
+		storedEncryptedSecret = secretEntry["encryptedSecret"]
+
+		if not self.crypto.verifyHmac(hmacKey,storedEncryptedSecret,storedHmac):
+			raise(Exception("Secret verification failed!"))
+
+		origSecretText = self.crypto.decrypt(origKey,storedEncryptedSecret)
+		origSecret = json.loads(origSecretText)
+
+		# Set the value
+		origSecret[fieldName] = value
+		
+		# Encrypt the secret
+		encryptedSecret = self.crypto.encrypt(origKey,json.dumps(origSecret))
+		hmac = self.crypto.createHmac(hmacKey,encryptedSecret)
+
+		self.client.updateSecret(sid,encryptedSecret,hmac)
+
 
 
 if __name__ == "__main__":
