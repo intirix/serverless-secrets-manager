@@ -75,11 +75,6 @@ class CLI:
 		print("      value - value to set")
 		print("        optional - will prompt for value if not provided")
 		print("")
-		print("  change-password <secretID> [password]")
-		print("    Alias for: set-secret-field <secretID> password <value>")
-		print("      secretID - ID of the secret")
-		print("      password - value to set")
-		print("")
 		print("  share-secret <secretID> <user>")
 		print("    Share a secret with another user")
 		print("      secretID - ID of the secret")
@@ -110,6 +105,18 @@ class CLI:
 		print("")
 		print("  generate-auth-token")
 		print("    Generate a token that can be used as a basic auth password")
+		print("")
+		print("")
+		print("Higher level commands:")
+		print("")
+		print("  change-password <secretID/Website> [password]")
+		print("    Alias for: set-secret-field <secretID> password <value>")
+		print("      secretID - ID of the secret")
+		print("      password - value to set")
+		print("")
+		print("  find-password <text>")
+		print("    Find a password based on the text")
+		print("      text - text to search for")
 		print("")
 
 	def parseConfig(self):
@@ -394,7 +401,46 @@ class CLI:
 					print("Secret verification failed for "+sid)
 
 
-			print(json.dumps(secrets,indent=2))
+		elif command == "find-password":
+
+			if len(self.args)==0:
+				self.help()
+				raise Exception("Expected argument <text>")
+
+			value = self.args[0]
+
+			privKey = self.getPrivateKey()
+			secretEntries = self.client.getSecretsForUser(self.user)
+
+
+			for sid in secretEntries.keys():
+				secretEntry = secretEntries[sid]
+				encryptedKey = self.crypto.decode(secretEntry["users"][self.user]["encryptedKey"])
+				storedHmac = secretEntry["hmac"]
+				storedEncryptedSecret = secretEntry["encryptedSecret"]
+
+				origKeyPair = self.crypto.decryptRSA(privKey,encryptedKey)
+				origKey = origKeyPair[0:32]
+				hmacKey = origKeyPair[32:]
+
+				if self.crypto.verifyHmac(hmacKey,storedEncryptedSecret,storedHmac):
+
+					origSecretText = self.crypto.decrypt(origKey,storedEncryptedSecret)
+					if sys.version_info.major == 3 and type(origSecretText)==bytes:
+						origSecretText = origSecretText.decode('utf-8')
+					origSecret = json.loads(origSecretText)
+					if origSecret["type"]=="password":
+						found = False
+						for k in origSecret.keys():
+							if str(origSecret[k]).lower().find(value.lower())>=0:
+								found = True
+						if found:
+							del origSecret["random"]
+							origSecret["sid"] = sid
+							print(json.dumps(origSecret,indent=2))
+				else:
+					print("Secret verification failed for "+sid)
+
 
 		elif command == "set-secret-field":
 			if len(self.args)==0:
@@ -425,11 +471,11 @@ class CLI:
 			if len(self.args)==0:
 				self.help()
 				raise Exception("Expected arguments <secretID>")
-			sid = self.args[0]
 
 			# Prompt for the password before prompting for the value
 			password = self.getPassword()
 
+			sid = self.findPassword(self.args[0])
 
 			# Get the value after getting the password
 			value = None
@@ -577,6 +623,41 @@ class CLI:
 
 		self.client.updateSecret(sid,encryptedSecret,hmac)
 
+	def findSid(self,value):
+
+		privKey = self.getPrivateKey()
+
+		secretEntries = self.client.getSecretsForUser(self.user)
+
+		secrets = {}
+
+
+		for sid in secretEntries.keys():
+			secretEntry = secretEntries[sid]
+			encryptedKey = self.crypto.decode(secretEntry["users"][self.user]["encryptedKey"])
+			storedHmac = secretEntry["hmac"]
+			storedEncryptedSecret = secretEntry["encryptedSecret"]
+
+			origKeyPair = self.crypto.decryptRSA(privKey,encryptedKey)
+			origKey = origKeyPair[0:32]
+			hmacKey = origKeyPair[32:]
+
+			if self.crypto.verifyHmac(hmacKey,storedEncryptedSecret,storedHmac):
+
+				origSecretText = self.crypto.decrypt(origKey,storedEncryptedSecret)
+				if sys.version_info.major == 3 and type(origSecretText)==bytes:
+					origSecretText = origSecretText.decode('utf-8')
+				origSecret = json.loads(origSecretText)
+
+				if "type" in origSecret and origSecret["type"]=="password":
+					for k in origSecret.keys():
+						if str(origSecret[k]).lower().find(value.lower())>=0:
+							del origSecret["random"]
+							del origSecret["password"]
+							print(json.dumps(origSecret,indent=2))
+							return sid
+
+		return value
 
 
 if __name__ == "__main__":
