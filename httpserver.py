@@ -164,7 +164,7 @@ class MyHandler(BaseHTTPRequestHandler):
 			parts = self.path.split('?')[0].split('/')
 			iface = self.server.serverIface
 
-			qs = parse_qs(urlparse.urlparse(self.path).query)
+			qs = parse_qs(urlparse(self.path).query)
 
 			if matches(self.path,["v1","users",None]):
 				user = parts[4]

@@ -202,11 +202,23 @@ class Server:
 		if len(post_body)>0:
 			data = json.loads(post_body)
 
-		encryptedKey = data["encryptedKey"]
+		encryptedKey = None
+		if "encryptedKey" in data:
+			encryptedKey = data["encryptedKey"]
+		else:
+			encryptedKey = data["users"][ctx.user]["encryptedKey"]
 		encryptedSecret = data["encryptedSecret"]
 		hmac = data["hmac"]
 
-		return self.system.addSecret(ctx.user,"1",encryptedKey,encryptedSecret,hmac)
+		sid = self.system.addSecret(ctx.user,"1",encryptedKey,encryptedSecret,hmac)
+
+		if "users" in data:
+			for user in data["users"].keys():
+				if user != ctx.user:
+					self.system.shareSecret(sid,user,data["users"][user]["encryptedKey"])
+
+
+		return sid
 
 	def shareSecret(self,ctx,sid,user,post_body):
 		data = {}
