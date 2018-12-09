@@ -130,6 +130,9 @@ def single_func(event, context):
 	if matches(event,"PUT","/v1/secrets/{sid}/users/{username}"):
 		return share_secret(event, context)
 
+	if matches(event,"DELETE","/v1/secrets/{sid}/users/{username}"):
+		return unshare_secret(event, context)
+
 	print("Did not match the event")
 	return {"statusCode":404}
 
@@ -237,6 +240,8 @@ def get_user_public_key(event, context):
 	try:
 		user = event["pathParameters"]["username"]
 		pem = obj.server.getUserPublicKey(obj.ctx,user)
+		if pem==None:
+			return {"statusCode":404}
 		return {"statusCode":200,"body":pem,"headers":{"Content-Type":"application/x-pem-file"}}
 	except server.AccessDeniedException:
 		obj.log.exception("Access Denied")
@@ -395,6 +400,25 @@ def share_secret(event, context):
 		user = event["pathParameters"]["username"]
 		body = get_body(event)
 		ret = obj.server.shareSecret(obj.ctx,sid,user,body)
+		return {"statusCode":200,"body":json.dumps(ret,indent=2)}
+	except server.AccessDeniedException:
+		obj.log.exception("Access Denied")
+		return {"statusCode":403}
+	except:
+		obj.log.exception("Error")
+		return {"statusCode":500}
+	return {"statusCode":404}
+
+def unshare_secret(event, context):
+	obj = LambdaCommon()
+	obj.authenticate(event)
+	if obj.getResponse() != None:
+		return obj.getResponse()
+
+	try:
+		sid = event["pathParameters"]["sid"]
+		user = event["pathParameters"]["username"]
+		ret = obj.server.unshareSecret(obj.ctx,sid,user)
 		return {"statusCode":200,"body":json.dumps(ret,indent=2)}
 	except server.AccessDeniedException:
 		obj.log.exception("Access Denied")

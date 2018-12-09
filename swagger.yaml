@@ -316,6 +316,11 @@ paths:
         required: true
         schema:
           type: "string"
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: "string"
       - in: body
         name: userdata
         required: true
@@ -326,6 +331,29 @@ paths:
           description: "successful operation"
           schema:
             $ref: "#/definitions/Secret"
+    delete:
+      summary: "Unshare a secret"
+      description: ""
+      operationId: "unshareSecret"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        name: sid
+        required: true
+        schema:
+          type: "string"
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Secret"
+      
 
 
 
@@ -367,6 +395,12 @@ definitions:
       canWrite:
         type: "string"
         description: "Can the user write to the secret"
+        enum:
+        - "Y"
+        - "N"
+      canShare:
+        type: "string"
+        description: "Can the user share to the secret"
         enum:
         - "Y"
         - "N"

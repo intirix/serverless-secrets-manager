@@ -70,11 +70,15 @@ class MyHandler(BaseHTTPRequestHandler):
 			elif matches(self.path,["v1","users",None,"keys","public"]):
 				user = parts[4]
 				pem = iface.getUserPublicKey(ctx,user)
-				self.send_response(200)
-				self.send_header("Connection", "close")
-				self.send_header("Content-Type","application/x-pem-file")
-				self.end_headers()
-				self.wfile.write(pem)
+				if pem==None:
+					self._send_response(404)
+				else:
+					self.send_response(200)
+					self.send_header("Connection", "close")
+					self.send_header("Content-Length", str(len(pem)))
+					self.send_header("Content-Type","application/x-pem-file")
+					self.end_headers()
+					self.wfile.write(pem)
 				return
 			elif matches(self.path,["v1","users",None,"keys","private","encrypted"]):
 				user = parts[4]
@@ -143,6 +147,13 @@ class MyHandler(BaseHTTPRequestHandler):
 					self._sendSecret(200,ctx,sid)
 				else:
 					self._send_response(404)
+			elif matches(self.path,["v1","secrets",None,"users",None]):
+				sid = parts[4]
+				user = parts[6]
+				if iface.shareSecret(ctx,sid,user,post_body):
+					self._sendSecret(200,ctx,sid)
+				else:
+					self._send_response(404)
 			else:
 				self._send_response(404)
 		except server.AccessDeniedException:
@@ -195,6 +206,41 @@ class MyHandler(BaseHTTPRequestHandler):
 				user = parts[4]
 				if iface.setUserEncryptedPrivateKey(ctx,user,post_body):
 					self._send_response(201)
+				else:
+					self._send_response(404)
+			elif matches(self.path,["v1","secrets",None,"users",None]):
+				sid = parts[4]
+				user = parts[6]
+				if iface.shareSecret(ctx,sid,user,post_body):
+					self._sendSecret(200,ctx,sid)
+				else:
+					self._send_response(404)
+			else:
+				self._send_response(404)
+		except server.AccessDeniedException:
+			self._send_response(403)
+		except:
+			log.exception("Internal server error")
+			self._send_response(500)
+
+	def do_DELETE(self):
+		log = logging.getLogger("httpHandler")
+		try:
+			ctx = self._authenticate()
+			if ctx == None:
+				self._send_response(401)
+				return
+
+			content_len = int(self.headers.getheader('content-length', 0))
+			post_body = self.rfile.read(content_len)
+			parts = self.path.split('?')[0].split('/')
+			iface = self.server.serverIface
+
+			if matches(self.path,["v1","secrets",None,"users",None]):
+				sid = parts[4]
+				user = parts[6]
+				if iface.unshareSecret(ctx,sid,user):
+					self._sendSecret(200,ctx,sid)
 				else:
 					self._send_response(404)
 			else:

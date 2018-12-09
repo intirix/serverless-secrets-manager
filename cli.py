@@ -37,6 +37,7 @@ class CLI:
 		print("  -p - password - Password used to decrypt")
 		print("  -u [username] - user to log in a")
 		print("  -c - save config for later")
+		print("  --force-password-auth - force redownload of the private key")
 		print("")
 		print("Commands:")
 		print("  save-config")
@@ -76,6 +77,11 @@ class CLI:
 		print("        optional - will prompt for value if not provided")
 		print("")
 		print("  share-secret <secretID> <user>")
+		print("    Share a secret with another user")
+		print("      secretID - ID of the secret")
+		print("      user - username to share with")
+		print("")
+		print("  unshare-secret <secretID> <user>")
 		print("    Share a secret with another user")
 		print("      secretID - ID of the secret")
 		print("      user - username to share with")
@@ -160,7 +166,9 @@ class CLI:
 	def parse(self):
 		self.parseConfig()
 
-		optlist, self.args = getopt.getopt(self.args, 'du:k:b:s:t:p:j:c')
+		self.forceGetKey = False
+
+		optlist, self.args = getopt.getopt(self.args, 'du:k:b:s:t:p:j:c', ["force-password-auth"])
 
 		saveConfig = False
 
@@ -190,6 +198,8 @@ class CLI:
 				self.config.set("server","jsonPath",a)
 			elif o=='-c':
 				saveConfig = True
+			elif o=='--force-password-auth':
+				self.forceGetKey = True
 			else:
 				assert False, "unhandled option"
 
@@ -248,7 +258,7 @@ class CLI:
 			# direct access doesn't require a password
 			self.client.login(self.user,"")
 		else:
-			if self.privateKeyFile==None:
+			if self.privateKeyFile==None or self.forceGetKey:
 				print("Logging in with password")
 				self.client.login(self.user,self.getPassword())
 			else:
@@ -268,7 +278,7 @@ class CLI:
 
 	def getPrivateKey(self):
 		if self.privateKey == None:
-			if self.privateKeyFile != None:
+			if self.privateKeyFile != None and not self.forceGetKey:
 				f = open(self.privateKeyFile,"r")
 				encryptedPrivateKey = f.read()
 				f.close()
@@ -552,6 +562,18 @@ class CLI:
 			encryptedKey2 = self.crypto.encryptRSA(pubKey,origKey)
 			print("Sharing with "+user)
 			self.client.shareSecret(sid,user,self.crypto.encode(encryptedKey2))
+
+		elif command == "unshare-secret":
+			if len(self.args)==0:
+				self.help()
+				raise Exception("Expected arguments <secretID> and <username>")
+			elif len(self.args)==1:
+				self.help()
+				raise Exception("Expected argument <username>")
+
+			sid = self.args[0]
+			user = self.args[1]
+			self.client.unshareSecret(sid,user)
 
 		elif command == "export-user-public-key":
 			exuser = self.user

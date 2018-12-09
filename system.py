@@ -140,6 +140,11 @@ class System:
 		self.db.sync()
 		return True
 
+	def unshareSecret(self,sid,user):
+		self.log.info("Revoking access to secret "+sid+" from "+user)
+		self.db.unshareSecret(sid,user)
+		self.db.sync()
+
 	def getSecret(self,sid):
 		return self.db.getSecret(sid)
 
@@ -151,6 +156,20 @@ class System:
 		if username in entry["users"]:
 			userEntry = entry["users"][username]
 			return "canWrite" in userEntry and "Y" == userEntry["canWrite"]
+		return False
+
+	def doesUserHaveShareAccess(self,username,sid):
+		entry = self.getSecret(sid)
+		if username in entry["users"]:
+			userEntry = entry["users"][username]
+			return "canShare" in userEntry and "Y" == userEntry["canShare"]
+		return False
+
+	def doesUserHaveUnshareAccess(self,username,sid):
+		entry = self.getSecret(sid)
+		if username in entry["users"]:
+			userEntry = entry["users"][username]
+			return "canUnshare" in userEntry and "Y" == userEntry["canUnshare"]
 		return False
 
 

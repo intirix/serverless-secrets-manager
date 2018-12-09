@@ -221,6 +221,9 @@ class Server:
 		return sid
 
 	def shareSecret(self,ctx,sid,user,post_body):
+		if not self.system.doesUserHaveShareAccess(ctx.user,sid):
+			raise AccessDeniedException()
+
 		data = {}
 		if len(post_body)>0:
 			data = json.loads(post_body)
@@ -230,7 +233,19 @@ class Server:
 		ret["sid"] = sid
 		return ret
 
+	def unshareSecret(self,ctx,sid,user):
+		if not self.system.doesUserHaveUnshareAccess(ctx.user,sid):
+			raise AccessDeniedException()
+
+		self.system.unshareSecret(sid,user)
+		ret = self.system.getSecret(sid)
+		ret["sid"] = sid
+		return ret
+
 	def updateSecret(self,ctx,sid,post_body):
+		if not self.system.doesUserHaveWriteAccess(ctx.user,sid):
+			raise AccessDeniedException()
+
 		data = {}
 		if len(post_body)>0:
 			data = json.loads(post_body)
