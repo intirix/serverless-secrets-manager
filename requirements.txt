@@ -2,3 +2,5 @@ boto3
 scrypt
 pycryptodome
 requests
+aws-xray-sdk
+basicauth

@@ -5,6 +5,7 @@ import crypto
 import accessrules
 import logging
 import traceback
+import basicauth
 
 
 class Context:
@@ -68,13 +69,12 @@ class Server:
 
     def validateAuthenticationHeader(self, header):
         if header != None and header.find("Basic ") == 0:
+            user = ""
             try:
-                (user, password) = self.crypto.decode(header.split(" ")[1]).split(
-                    ":", 1
-                )
+                (user, password) = basicauth.decode(header)
                 return self.validateAuthentication(user, password)
             except:
-                self.log.exception("Failed login for user: " + username)
+                self.log.exception("Failed login for user: " + user)
         return None
 
     def _getUserData(self, ctx, user, obj):

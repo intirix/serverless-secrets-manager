@@ -15,3 +15,4 @@ out
 build
 dist
 unittest.key
+copy2.py

@@ -9,6 +9,11 @@ import json
 import base64
 import os
 
+from aws_xray_sdk.core import patch_all
+
+if "AWS_REGION" in os.environ:
+    patch_all()
+
 
 class LambdaCommon:
     def __init__(self):

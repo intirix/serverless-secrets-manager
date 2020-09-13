@@ -12,6 +12,13 @@ workspace="$( dirname $0 )"
 	then
 		virtualenv .contents
 		.contents/bin/pip install -r requirements.txt
+		.contents/bin/pip install -r requirements.dev.txt
+	fi
+
+	if [ ! -e .contents2 ]
+	then
+		virtualenv .contents2
+		.contents2/bin/pip install -r requirements.txt
 	fi
 
 	.contents/bin/coverage erase
@@ -25,15 +32,13 @@ workspace="$( dirname $0 )"
 	echo zip lambda.zip *.py
 	zip lambda.zip *.py
 
-	(
-		cd .contents2/lib/python2.7/site-packages
-		echo zip -u -r "$workspace/lambda.zip" *
-		zip -u -r "$workspace/lambda.zip" *
-	)
-	(
-		cd .contents2/lib64/python2.7/site-packages
-		echo zip -u -r "$workspace/lambda.zip" *
-		zip -u -r "$workspace/lambda.zip" *
-	)
+	for x in .contents2/lib*/python*/site-packages
+	do
+		(
+			cd $x
+			echo zip -u -r "$workspace/lambda.zip" *
+			zip -u -r "$workspace/lambda.zip" *
+		)
+	done
 
 )

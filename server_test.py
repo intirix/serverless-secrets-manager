@@ -5,6 +5,7 @@ import json
 import server
 import client
 import logging
+import basicauth
 
 
 class TestServer(unittest.TestCase):
@@ -48,6 +49,18 @@ class TestServer(unittest.TestCase):
         srv = server.Server(mysys)
 
         self.assertEqual("admin", srv.validateAuthentication("admin", "password").user)
+
+    def testPasswordBasedAuthHeaderWhenEnabled(self):
+        (mysys, pub, priv) = self.createMockSystem()
+        mysys.enablePasswordAuth("admin")
+        srv = server.Server(mysys)
+
+        self.assertEqual(
+            "admin",
+            srv.validateAuthenticationHeader(
+                basicauth.encode("admin", "password")
+            ).user,
+        )
 
     def testUserCanChangeOwnDisplayName(self):
         (mysys, pub, priv) = self.createMockSystem()
