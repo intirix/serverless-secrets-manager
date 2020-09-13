@@ -1,0 +1,457 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: username
+          AttributeType: S
+      KeySchema:
+        - AttributeName: username
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: '1'
+        WriteCapacityUnits: '1'
+  SecretsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: sid
+          AttributeType: S
+      KeySchema:
+        - AttributeName: sid
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: '1'
+        WriteCapacityUnits: '1'
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+  FunctionPolicy:
+    DependsOn:
+      - UsersTable
+      - SecretsTable
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Roles:
+        - !Ref 'Role'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - logs:*
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+              - dynamodb:Scan
+              - dynamodb:Query
+              - dynamodb:DeleteItem
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+            Resource:
+              - !Join
+                - ''
+                - - 'arn:aws:dynamodb:'
+                  - !Ref 'AWS::Region'
+                  - :*:table/
+                  - !Ref 'UsersTable'
+              - !Join
+                - ''
+                - - 'arn:aws:dynamodb:'
+                  - !Ref 'AWS::Region'
+                  - :*:table/
+                  - !Ref 'SecretsTable'
+  Function:
+    DependsOn:
+      - Role
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: serverless-secret-manager-us-east-1
+        S3Key: lambda/lambda.zip
+      Description: Serverless Secret Manager Lambda function
+      FunctionName: !Join
+        - ''
+        - - !Ref 'AWS::StackName'
+          - -func
+      Handler: lambda_functions.single_func
+      Environment:
+        Variables:
+          USERS_TABLE: !Ref 'UsersTable'
+          SECRETS_TABLE: !Ref 'SecretsTable'
+      MemorySize: 128
+      Runtime: python2.7
+      Role: !GetAtt 'Role.Arn'
+      Timeout: 120
+  RestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: SecretManager-API
+  LambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:invokeFunction
+      FunctionName: !GetAtt 'Function.Arn'
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Join
+        - ''
+        - - 'arn:aws:execute-api:'
+          - !Ref 'AWS::Region'
+          - ':'
+          - !Ref 'AWS::AccountId'
+          - ':'
+          - !Ref 'RestApi'
+          - /*/*/*
+  RestDeployment:
+    DependsOn:
+      - RestApi
+      - Function
+      - RestMethodANYV1SecretsSid
+      - RestMethodANYV1UsersUsername
+      - RestMethodANYV1UsersUsernameKeysPrivateEncrypted
+      - RestMethodANYV1UsersUsernameKeysPublic
+      - RestMethodGETV1Users
+      - RestMethodGETV1UsersUsernameSecrets
+      - RestMethodPOSTV1Secrets
+      - RestMethodPOSTV1UsersUsernameKeys
+      - RestMethodANYV1SecretsSidUsersUsername
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId: !Ref 'RestApi'
+  RestStage:
+    DependsOn:
+      - RestDeployment
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      DeploymentId: !Ref 'RestDeployment'
+      RestApiId: !Ref 'RestApi'
+      MethodSettings:
+        - DataTraceEnabled: true
+          HttpMethod: '*'
+          LoggingLevel: INFO
+          ResourcePath: /*
+      StageName: prod
+  RestResourceV1:
+    DependsOn:
+      - RestApi
+      - Function
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt 'RestApi.RootResourceId'
+      PathPart: v1
+      RestApiId: !Ref 'RestApi'
+  RestResourceV1Users:
+    DependsOn:
+      - RestResourceV1
+      - Function
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref 'RestResourceV1'
+      PathPart: users
+      RestApiId: !Ref 'RestApi'
+  RestMethodGETV1Users:
+    DependsOn:
+      - RestResourceV1Users
+      - LambdaPermission
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: GET
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Join
+          - ''
+          - - 'arn:aws:apigateway:'
+            - !Ref 'AWS::Region'
+            - :lambda:path/2015-03-31/functions/
+            - !GetAtt 'Function.Arn'
+            - /invocations
+      MethodResponses:
+        - StatusCode: '200'
+      ResourceId: !Ref 'RestResourceV1Users'
+      RestApiId: !Ref 'RestApi'
+  RestResourceV1UsersUsername:
+    DependsOn:
+      - RestResourceV1Users
+      - Function
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref 'RestResourceV1Users'
+      PathPart: '{username}'
+      RestApiId: !Ref 'RestApi'
+  RestMethodANYV1UsersUsername:
+    DependsOn:
+      - RestResourceV1UsersUsername
+      - LambdaPermission
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: ANY
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Join
+          - ''
+          - - 'arn:aws:apigateway:'
+            - !Ref 'AWS::Region'
+            - :lambda:path/2015-03-31/functions/
+            - !GetAtt 'Function.Arn'
+            - /invocations
+      MethodResponses:
+        - StatusCode: '200'
+        - StatusCode: '201'
+      ResourceId: !Ref 'RestResourceV1UsersUsername'
+      RestApiId: !Ref 'RestApi'
+  RestResourceV1UsersUsernameKeys:
+    DependsOn:
+      - RestResourceV1UsersUsername
+      - Function
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref 'RestResourceV1UsersUsername'
+      PathPart: keys
+      RestApiId: !Ref 'RestApi'
+  RestMethodPOSTV1UsersUsernameKeys:
+    DependsOn:
+      - RestResourceV1UsersUsernameKeys
+      - LambdaPermission
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Join
+          - ''
+          - - 'arn:aws:apigateway:'
+            - !Ref 'AWS::Region'
+            - :lambda:path/2015-03-31/functions/
+            - !GetAtt 'Function.Arn'
+            - /invocations
+      MethodResponses:
+        - StatusCode: '200'
+      ResourceId: !Ref 'RestResourceV1UsersUsernameKeys'
+      RestApiId: !Ref 'RestApi'
+  RestResourceV1UsersUsernameKeysPublic:
+    DependsOn:
+      - RestResourceV1UsersUsernameKeys
+      - Function
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref 'RestResourceV1UsersUsernameKeys'
+      PathPart: public
+      RestApiId: !Ref 'RestApi'
+  RestMethodANYV1UsersUsernameKeysPublic:
+    DependsOn:
+      - RestResourceV1UsersUsernameKeysPublic
+      - LambdaPermission
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: ANY
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Join
+          - ''
+          - - 'arn:aws:apigateway:'
+            - !Ref 'AWS::Region'
+            - :lambda:path/2015-03-31/functions/
+            - !GetAtt 'Function.Arn'
+            - /invocations
+      MethodResponses:
+        - StatusCode: '200'
+        - StatusCode: '201'
+      ResourceId: !Ref 'RestResourceV1UsersUsernameKeysPublic'
+      RestApiId: !Ref 'RestApi'
+  RestResourceV1UsersUsernameKeysPrivate:
+    DependsOn:
+      - RestResourceV1UsersUsernameKeys
+      - Function
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref 'RestResourceV1UsersUsernameKeys'
+      PathPart: private
+      RestApiId: !Ref 'RestApi'
+  RestResourceV1UsersUsernameKeysPrivateEncrypted:
+    DependsOn:
+      - RestResourceV1UsersUsernameKeysPrivate
+      - Function
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref 'RestResourceV1UsersUsernameKeysPrivate'
+      PathPart: encrypted
+      RestApiId: !Ref 'RestApi'
+  RestMethodANYV1UsersUsernameKeysPrivateEncrypted:
+    DependsOn:
+      - RestResourceV1UsersUsernameKeysPrivateEncrypted
+      - LambdaPermission
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: ANY
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Join
+          - ''
+          - - 'arn:aws:apigateway:'
+            - !Ref 'AWS::Region'
+            - :lambda:path/2015-03-31/functions/
+            - !GetAtt 'Function.Arn'
+            - /invocations
+      MethodResponses:
+        - StatusCode: '200'
+        - StatusCode: '201'
+      ResourceId: !Ref 'RestResourceV1UsersUsernameKeysPrivateEncrypted'
+      RestApiId: !Ref 'RestApi'
+  RestResourceV1UsersUsernameSecrets:
+    DependsOn:
+      - RestResourceV1UsersUsername
+      - Function
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref 'RestResourceV1UsersUsername'
+      PathPart: secrets
+      RestApiId: !Ref 'RestApi'
+  RestMethodGETV1UsersUsernameSecrets:
+    DependsOn:
+      - RestResourceV1UsersUsername
+      - LambdaPermission
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: GET
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Join
+          - ''
+          - - 'arn:aws:apigateway:'
+            - !Ref 'AWS::Region'
+            - :lambda:path/2015-03-31/functions/
+            - !GetAtt 'Function.Arn'
+            - /invocations
+      MethodResponses:
+        - StatusCode: '200'
+      ResourceId: !Ref 'RestResourceV1UsersUsernameSecrets'
+      RestApiId: !Ref 'RestApi'
+  RestResourceV1Secrets:
+    DependsOn:
+      - RestResourceV1
+      - Function
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref 'RestResourceV1'
+      PathPart: secrets
+      RestApiId: !Ref 'RestApi'
+  RestMethodPOSTV1Secrets:
+    DependsOn:
+      - RestResourceV1Secrets
+      - LambdaPermission
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Join
+          - ''
+          - - 'arn:aws:apigateway:'
+            - !Ref 'AWS::Region'
+            - :lambda:path/2015-03-31/functions/
+            - !GetAtt 'Function.Arn'
+            - /invocations
+      MethodResponses:
+        - StatusCode: '201'
+      ResourceId: !Ref 'RestResourceV1Secrets'
+      RestApiId: !Ref 'RestApi'
+  RestResourceV1SecretsSid:
+    DependsOn:
+      - RestResourceV1Secrets
+      - Function
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref 'RestResourceV1Secrets'
+      PathPart: '{sid}'
+      RestApiId: !Ref 'RestApi'
+  RestMethodANYV1SecretsSid:
+    DependsOn:
+      - RestResourceV1SecretsSid
+      - LambdaPermission
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: ANY
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Join
+          - ''
+          - - 'arn:aws:apigateway:'
+            - !Ref 'AWS::Region'
+            - :lambda:path/2015-03-31/functions/
+            - !GetAtt 'Function.Arn'
+            - /invocations
+      MethodResponses:
+        - StatusCode: '200'
+        - StatusCode: '201'
+      ResourceId: !Ref 'RestResourceV1SecretsSid'
+      RestApiId: !Ref 'RestApi'
+  RestResourceV1SecretsSidUsers:
+    DependsOn:
+      - RestResourceV1SecretsSid
+      - Function
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref 'RestResourceV1SecretsSid'
+      PathPart: users
+      RestApiId: !Ref 'RestApi'
+  RestResourceV1SecretsSidUsersUsername:
+    DependsOn:
+      - RestResourceV1SecretsSidUsers
+      - Function
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref 'RestResourceV1SecretsSidUsers'
+      PathPart: '{username}'
+      RestApiId: !Ref 'RestApi'
+  RestMethodANYV1SecretsSidUsersUsername:
+    DependsOn:
+      - RestResourceV1SecretsSidUsersUsername
+      - LambdaPermission
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: ANY
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Join
+          - ''
+          - - 'arn:aws:apigateway:'
+            - !Ref 'AWS::Region'
+            - :lambda:path/2015-03-31/functions/
+            - !GetAtt 'Function.Arn'
+            - /invocations
+      MethodResponses:
+        - StatusCode: '200'
+        - StatusCode: '201'
+      ResourceId: !Ref 'RestResourceV1SecretsSidUsersUsername'
+      RestApiId: !Ref 'RestApi'

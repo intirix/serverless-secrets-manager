@@ -46,12 +46,12 @@ keys but you can use a secure side channel to transfer your private keys.
 
 #### Create the stack
 
-aws --region=us-east-1 cloudformation create-stack --stack-name SecretManagerAPI --template-body "$(cat cfn.json)" --capabilities CAPABILITY_IAM && aws --region=us-east-1 cloudformation wait stack-create-complete --stack-name SecretManagerAPI
+aws --region=us-east-1 cloudformation create-stack --stack-name SecretManagerAPI --template-body "$(cat cfn.yaml)" --capabilities CAPABILITY_IAM && aws --region=us-east-1 cloudformation wait stack-create-complete --stack-name SecretManagerAPI
 
 
 #### Update the stack
 
-aws --region=us-east-1 cloudformation update-stack --stack-name SecretManagerAPI --template-body "$(cat cfn.json)" --capabilities CAPABILITY_IAM && aws --region=us-east-1 cloudformation wait stack-update-complete --stack-name SecretManagerAPI
+aws --region=us-east-1 cloudformation update-stack --stack-name SecretManagerAPI --template-body "$(cat cfn.yaml)" --capabilities CAPABILITY_IAM && aws --region=us-east-1 cloudformation wait stack-update-complete --stack-name SecretManagerAPI
 
 
 #### Delete the stack
