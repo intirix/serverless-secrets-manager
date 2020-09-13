@@ -478,7 +478,7 @@ class Midtier(QObject):
 			self.sigMessage.emit("Updating information")
 			with Midtier.session._lock:
 				for password in Midtier.session._passwords:
-					if if "sid" in password and password["sid"] == sid:
+					if "sid" in password and password["sid"] == sid:
 						self.updatePasswordCategoryInfo(password)
 						password["website"]=obj["website"]
 						password["address"]=obj["url"]

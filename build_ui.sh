@@ -8,9 +8,9 @@ then
 	then
 		VIRTUALENV=$( which virtualenv )
 	fi
-	if [ -z "PYTHON_BIN" ]
+	if [ -z "$PYTHON_BIN" ]
 	then
-		PYTHON_BIN=python3
+		PYTHON_BIN=$( which python3 )
 	fi
 	$VIRTUALENV -p $PYTHON_BIN .contents_ui
 fi

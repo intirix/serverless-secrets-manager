@@ -3,13 +3,13 @@
 import unittest
 import json
 import sys
-import ConfigParser
+import configparser
 from cli import CLI
 
 class MockCLI(CLI):
 
 	def initUserConfig(self):
-		self.config = ConfigParser.SafeConfigParser()
+		self.config = configparser.SafeConfigParser()
 		self.config.add_section("server")
 
 

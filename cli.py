@@ -10,7 +10,7 @@ import getpass
 import crypto
 import json
 import appdirs
-import ConfigParser
+import configparser
 import os
 import shutil
 import base64
@@ -211,9 +211,9 @@ class CLI:
 			self.saveConfig(False)
 
 	def initUserConfig(self):
-                self.userConfigDir = appdirs.user_data_dir("ServerLessSecretsManagerCLI","intirix")
+		self.userConfigDir = appdirs.user_data_dir("ServerLessSecretsManagerCLI","intirix")
 		self.userConfigFile = self.userConfigDir+"/userConfig.ini"
-		self.config = ConfigParser.SafeConfigParser()
+		self.config = configparser.SafeConfigParser()
 		if os.path.exists(self.userConfigFile):
 			self.config.read(self.userConfigFile)
 		if not self.config.has_section("server"):
