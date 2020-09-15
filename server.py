@@ -43,6 +43,8 @@ class Server:
             elif self.rules.isEnabled(username):
                 userdata = self.system.getUser(username)
 
+                data = None
+
                 if self.rules.canAuthenticateWithPassword(username):
                     try:
                         privKey = self.system.getUserPrivateKey(username, password)
@@ -52,8 +54,19 @@ class Server:
                         traceback.print_exc()
                         # ignore and move on to the next auth type
                         pass
+                else:
+                    try:
+                        data = json.loads(password)
+                    except json.decoder.JSONDecodeError as e:
+                        self.log.warning(
+                            "%s attempted password authenticaion when password authentication is disabled: %s"
+                            % (username, e)
+                        )
+                        return None
 
-                data = json.loads(password)
+                # The data might have already been parsed
+                if data is None:
+                    data = json.loads(password)
                 token = data["token"]
                 signedToken = data["signed"]
                 pub = self.system.getUserPublicKey(username)

@@ -16,7 +16,7 @@ if "AWS_REGION" in os.environ:
 
 
 class LambdaCommon:
-    def __init__(self):
+    def __init__(self, ddb_client=None):
         self.log = logging.getLogger("Lambda")
         self.system = system.System()
 
@@ -27,7 +27,7 @@ class LambdaCommon:
         if "SECRETS_TABLE" in os.environ:
             secretsTable = os.environ["SECRETS_TABLE"]
 
-        self.db = db.CacheDB(db.DynamoDB(userTable, secretsTable))
+        self.db = db.CacheDB(db.DynamoDB(userTable, secretsTable, ddb_client))
         self.system.setDB(self.db)
         self.system.init()
         self.client = client.Client(client.ClientSystemInterface(self.system))
@@ -95,6 +95,16 @@ def matches(event, meth, path):
     return False
 
 
+_singleton = None
+
+
+def get_lambda_common():
+    global _singleton
+    if _singleton is None:
+        _singleton = LambdaCommon()
+    return _singleton
+
+
 def single_func(event, context):
     # print(json.dumps(event,indent=2))
     if matches(event, "GET", "/v1/users"):
@@ -153,7 +163,7 @@ def single_func(event, context):
 
 
 def list_users(event, context):
-    obj = LambdaCommon()
+    obj = get_lambda_common()
     obj.authenticate(event)
     if obj.getResponse() != None:
         return obj.getResponse()
@@ -173,7 +183,7 @@ def list_users(event, context):
 
 
 def get_user(event, context):
-    obj = LambdaCommon()
+    obj = get_lambda_common()
     obj.authenticate(event)
     if obj.getResponse() != None:
         return obj.getResponse()
@@ -194,7 +204,7 @@ def get_user(event, context):
 
 
 def update_user(event, context):
-    obj = LambdaCommon()
+    obj = get_lambda_common()
     obj.authenticate(event)
     if obj.getResponse() != None:
         return obj.getResponse()
@@ -218,7 +228,7 @@ def update_user(event, context):
 
 
 def set_user_public_key(event, context):
-    obj = LambdaCommon()
+    obj = get_lambda_common()
     obj.authenticate(event)
     if obj.getResponse() != None:
         return obj.getResponse()
@@ -243,7 +253,7 @@ def set_user_public_key(event, context):
 
 
 def create_user(event, context):
-    obj = LambdaCommon()
+    obj = get_lambda_common()
     obj.authenticate(event)
     if obj.getResponse() != None:
         return obj.getResponse()
@@ -268,7 +278,7 @@ def create_user(event, context):
 
 
 def get_user_public_key(event, context):
-    obj = LambdaCommon()
+    obj = get_lambda_common()
     obj.authenticate(event)
     if obj.getResponse() != None:
         return obj.getResponse()
@@ -293,7 +303,7 @@ def get_user_public_key(event, context):
 
 
 def get_user_private_key_encrypted(event, context):
-    obj = LambdaCommon()
+    obj = get_lambda_common()
     obj.authenticate(event)
     if obj.getResponse() != None:
         return obj.getResponse()
@@ -301,7 +311,9 @@ def get_user_private_key_encrypted(event, context):
     try:
         user = event["pathParameters"]["username"]
         data = obj.server.getUserEncryptedPrivateKey(obj.ctx, user)
-        b64 = base64.b64encode(data)
+        if isinstance(data, str):
+            data = data.encode("UTF-8")
+        b64 = base64.b64encode(data).decode("UTF-8")
         return {
             "statusCode": 200,
             "body": b64,
@@ -318,14 +330,18 @@ def get_user_private_key_encrypted(event, context):
 
 
 def generate_user_keys(event, context):
-    obj = LambdaCommon()
+    obj = get_lambda_common()
     obj.authenticate(event)
     if obj.getResponse() != None:
         return obj.getResponse()
 
     try:
         user = event["pathParameters"]["username"]
-        body = get_body(event).strip()
+        body = get_body(event)
+        if body is None:
+            obj.log.exception("Password not provided in body")
+            return {"statusCode": 400}
+        body = body.strip()
 
         generate = False
         if (
@@ -352,7 +368,7 @@ def generate_user_keys(event, context):
 
 
 def set_user_private_key_encrypted(event, context):
-    obj = LambdaCommon()
+    obj = get_lambda_common()
     obj.authenticate(event)
     if obj.getResponse() != None:
         return obj.getResponse()
@@ -376,7 +392,7 @@ def set_user_private_key_encrypted(event, context):
 
 
 def get_user_secrets(event, context):
-    obj = LambdaCommon()
+    obj = get_lambda_common()
     obj.authenticate(event)
     if obj.getResponse() != None:
         return obj.getResponse()
@@ -397,7 +413,7 @@ def get_user_secrets(event, context):
 
 
 def get_secret(event, context):
-    obj = LambdaCommon()
+    obj = get_lambda_common()
     obj.authenticate(event)
     if obj.getResponse() != None:
         return obj.getResponse()
@@ -418,7 +434,7 @@ def get_secret(event, context):
 
 
 def update_secret(event, context):
-    obj = LambdaCommon()
+    obj = get_lambda_common()
     obj.authenticate(event)
     if obj.getResponse() != None:
         return obj.getResponse()
@@ -442,7 +458,7 @@ def update_secret(event, context):
 
 
 def add_secret(event, context):
-    obj = LambdaCommon()
+    obj = get_lambda_common()
     obj.authenticate(event)
     if obj.getResponse() != None:
         return obj.getResponse()
@@ -464,7 +480,7 @@ def add_secret(event, context):
 
 
 def share_secret(event, context):
-    obj = LambdaCommon()
+    obj = get_lambda_common()
     obj.authenticate(event)
     if obj.getResponse() != None:
         return obj.getResponse()
@@ -485,7 +501,7 @@ def share_secret(event, context):
 
 
 def unshare_secret(event, context):
-    obj = LambdaCommon()
+    obj = get_lambda_common()
     obj.authenticate(event)
     if obj.getResponse() != None:
         return obj.getResponse()

@@ -17,13 +17,15 @@ class DBInterface:
 
 
 class DynamoDB(DBInterface):
-    def __init__(self, usersTable, secretsTable):
+    def __init__(self, usersTable, secretsTable, ddb_client=None):
         self.log = logging.getLogger("DynamoDB")
         self.usersTable = usersTable
         self.secretsTable = secretsTable
 
+        self.client = ddb_client
+
         # For unit testing
-        if self.usersTable != None:
+        if self.usersTable != None and self.client is None:
             self.client = boto3.client("dynamodb")
 
     def sync(self):

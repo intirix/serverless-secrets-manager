@@ -39,8 +39,8 @@ class Crypto:
         rng = Random.new().read
         RSAkey = RSA.generate(2048, rng)
         pubkey = RSAkey.publickey()
-        publicPem = pubkey.exportKey()
-        privatePem = RSAkey.exportKey(pkcs=8)
+        publicPem = pubkey.exportKey().decode("UTF-8")
+        privatePem = RSAkey.exportKey(pkcs=8).decode("UTF-8")
         return (privatePem, publicPem)
 
     def pad(self, s):
@@ -78,7 +78,7 @@ class Crypto:
         iv = Random.new().read(AES.block_size)
         cipher = AES.new(key, AES.MODE_CBC, iv)
         encrypted = iv + cipher.encrypt(self.pad(message))
-        encoded = base64.b64encode(encrypted)
+        encoded = base64.b64encode(encrypted).decode("UTF-8")
         return encoded
 
     def decrypt(self, key, encrypted):
