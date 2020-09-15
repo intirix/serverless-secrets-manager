@@ -236,7 +236,7 @@ def set_user_public_key(event, context):
     try:
         user = event["pathParameters"]["username"]
         body = get_body(event)
-        keyType = self.server.getPublicKeyType(body)
+        keyType = obj.server.getPublicKeyType(body)
         if obj.server.setUserPublicKey(obj.ctx, user, body, keyType):
             return {
                 "statusCode": 200,

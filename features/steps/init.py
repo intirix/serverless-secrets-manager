@@ -10,6 +10,7 @@ def step_impl(context):
     )
     context.lambda_common = lambda_functions._singleton
     context.system = context.lambda_common.system
+    context.crypto = context.system.crypto
     context.event = {}
     context.event["headers"] = {}
     context.event["requestContext"] = {}

@@ -155,6 +155,12 @@ class System:
     def getSecretsForUser(self, user):
         return self.db.getSecretsForUser(user)
 
+    def doesUserHaveReadAccess(self, username, sid):
+        entry = self.getSecret(sid)
+        if username in entry["users"]:
+            return True
+        return False
+
     def doesUserHaveWriteAccess(self, username, sid):
         entry = self.getSecret(sid)
         if username in entry["users"]:

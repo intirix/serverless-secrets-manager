@@ -33,7 +33,7 @@ def step_impl(context, name, value):
     body = {}
     if context.event["body"] is not None:
         body = json.loads(context.event["body"])
-    body["name"] = value
+    body[name] = value
     context.event["body"] = json.dumps(body, indent=2)
     context.event["headers"]["Content-Type"] = "application/json"
 

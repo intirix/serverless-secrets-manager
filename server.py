@@ -272,6 +272,8 @@ class Server:
         return self.system.updateSecret(sid, encryptedSecret, hmac)
 
     def getSecret(self, ctx, sid):
+        if not self.system.doesUserHaveReadAccess(ctx.user, sid):
+            raise AccessDeniedException()
         ret = self.system.getSecret(sid)
         ret["sid"] = sid
         return ret
