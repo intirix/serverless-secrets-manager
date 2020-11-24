@@ -32,9 +32,9 @@ def addField(v, d, field):
 
 def makeSortString(d):
     ret = ""
-    if "website" in d and len(d["website"]) > 0:
+    if "website" in d and d["website"] is not None and len(d["website"]) > 0:
         ret = addField(ret, d, "website").replace("www.", "")
-    elif "address" in d and len(d["address"]) > 0:
+    elif "address" in d and d["address"] is not None and len(d["address"]) > 0:
         ret = addField(ret, d, "address").replace("www.", "")
     else:
         ret = "zzz_"
