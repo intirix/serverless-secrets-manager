@@ -430,7 +430,7 @@ class Midtier(QObject):
             self.sigMessage.emit("Uploading encrypted password")
             self._yield()
             secret = Midtier.session.client.addSecret(
-                user, "1", eek, encryptedSecret.decode("utf-8"), hmac
+                user, "1", eek, encryptedSecret, hmac
             )
             sid = secret["sid"]
             secretValue["sid"] = sid
@@ -504,7 +504,7 @@ class Midtier(QObject):
             self.sigMessage.emit("Uploading encrypted secret")
             self._yield()
             Midtier.session.client.updateSecret(
-                sid, encryptedSecret.decode("utf-8"), hmac
+                sid, encryptedSecret, hmac
             )
             self.sigMessage.emit("Uploaded encrypted secret")
 

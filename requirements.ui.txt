@@ -1,2 +1,4 @@
 pyqt5
 pyinstaller
+appdirs
+scrypt

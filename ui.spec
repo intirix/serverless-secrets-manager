@@ -6,10 +6,14 @@ import os, site
 from distutils.sysconfig import get_python_lib
 import glob
 
+qt5folder = "Qt5"
+
 possible_site_packages_dir = [get_python_lib()] + site.getsitepackages()
+for x in possible_site_packages_dir:
+    print(str(x))
 possible_site_packages_dir = list(
     filter(
-        lambda x: os.path.exists(os.path.join(x, "PyQt5", "Qt", "qml")),
+        lambda x: os.path.exists(os.path.join(x, "PyQt5", qt5folder, "qml")),
         possible_site_packages_dir,
     )
 )
@@ -17,7 +21,7 @@ possible_site_packages_dir = list(
 site_packages_dir = possible_site_packages_dir[0]
 
 # Add all the system qml files
-qml_dir = os.path.join(site_packages_dir, "PyQt5", "Qt", "qml")
+qml_dir = os.path.join(site_packages_dir, "PyQt5", qt5folder, "qml")
 
 added_files = [
     (os.path.join(qml_dir, "QtQuick"), "_qml/QtQuick"),
@@ -26,39 +30,39 @@ added_files = [
 
 bin_files = []
 for lib in ["libQt5Quick", "libQt5Sql"]:
-    for found in glob.glob(site_packages_dir + "/PyQt5/Qt/lib/" + lib + ".*"):
+    for found in glob.glob(f"{site_packages_dir}/PyQt5/{qt5folder}/lib/{lib}.*"):
         bin_files.append((found, "."))
 plugin_dest = "qt5_plugins"
 if os.name == "nt":
-    plugin_dest = "PyQt5/Qt/plugins"
-for plugin in ["egldeviceintegrations", "xcbglintegrations"]:
-    if os.path.exists(site_packages_dir + "/PyQt5/Qt/plugins/" + plugin):
+    plugin_dest = f"PyQt5/{qt5folder}/plugins"
+for plugin in ["egldeviceintegrations", "xcbglintegrations", "sqldrivers"]:
+    if os.path.exists(f"{site_packages_dir}/PyQt5/{qt5folder}/plugins/{plugin}"):
         bin_files.append(
             (
-                site_packages_dir + "/PyQt5/Qt/plugins/" + plugin,
+                f"{site_packages_dir}/PyQt5/{qt5folder}/plugins/{plugin}",
                 plugin_dest + "/" + plugin,
             )
         )
 for plugin in ["sqldrivers"]:
         bin_files.append(
             (
-                site_packages_dir + "/PyQt5/Qt/plugins/" + plugin,
+                f"{site_packages_dir}/PyQt5/{qt5folder}/plugins/{plugin}",
                 plugin,
             )
         )
 
-for dll in glob.glob(site_packages_dir + "/PyQt5/Qt/bin/*.dll"):
+for dll in glob.glob(f"{site_packages_dir}/PyQt5/{qt5folder}/bin/*.dll"):
     bin_files.append((dll, "."))
 # for dll in [ 'libeay32.dll', 'qt5quick.dll', 'qt5sql.dll' ]:
-# 	if os.path.exists(site_packages_dir+'/PyQt5/Qt/bin/'+dll):
-# 		bin_files.append((site_packages_dir+'/PyQt5/Qt/bin/'+dll,'.'))
+# 	if os.path.exists(f"{site_packages_dir}/PyQt5/{qt5folder}/bin/"+dll):
+# 		bin_files.append((f"{site_packages_dir}/PyQt5/{qt5folder}/bin/"+dll,'.'))
 
 bin_files.append(
     (glob.glob(site_packages_dir + "/scrypt.libs/libcrypto-*")[0], ".")
 )
-bin_files.append(
-    (glob.glob(site_packages_dir + "/scrypt.libs/libz-*")[0], ".")
-)
+#bin_files.append(
+#    (glob.glob(site_packages_dir + "/scrypt.libs/libz-*")[0], ".")
+#)
 
 a = Analysis(
     ["ui.py"],

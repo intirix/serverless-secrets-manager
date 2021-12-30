@@ -226,7 +226,7 @@ class CLI:
             "ServerLessSecretsManagerCLI", "intirix"
         )
         self.userConfigFile = self.userConfigDir + "/userConfig.ini"
-        self.config = configparser.SafeConfigParser()
+        self.config = configparser.ConfigParser()
         if os.path.exists(self.userConfigFile):
             self.config.read(self.userConfigFile)
         if not self.config.has_section("server"):
@@ -239,7 +239,7 @@ class CLI:
             os.makedirs(self.userConfigDir)
         if verbose:
             print("Writing configuration to " + self.userConfigFile)
-        with open(self.userConfigFile, "wb") as configfile:
+        with open(self.userConfigFile, "w") as configfile:
             self.config.write(configfile)
 
     def init(self):

@@ -7,11 +7,19 @@ from distutils.sysconfig import get_python_lib
 import glob
 
 site_packages_dir = get_python_lib()
+scrypt_so = None
 try:
-	site_packages_dir = site.getsitepackages()[1]
-except:
-	pass
+    print("Site Packages: "+str(site.getsitepackages()))
 
+    for sp in site.getsitepackages():
+        for so in glob.glob(sp+'/_scrypt*'):
+            scrypt_so = so
+
+    site_packages_dir = site.getsitepackages()[1]
+except:
+    pass
+
+print(f"Bundling scrypt so: {scrypt_so}")
 
 a = Analysis(['cli.py'],
              pathex=[os.getcwd()],
@@ -25,7 +33,8 @@ a = Analysis(['cli.py'],
              win_private_assemblies=False,
              cipher=block_cipher)
 
-a.binaries.append(('_scrypt', glob.glob(site_packages_dir+'/_scrypt*')[0], 'EXTENSION'))
+a.binaries.append(('_scrypt', scrypt_so, 'EXTENSION'))
+
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
 exe = EXE(pyz,

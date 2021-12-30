@@ -1,5 +1,7 @@
 boto3
 scrypt
-pycrypto
+pycryptodome
 requests
 appdirs
+basicauth
+aws_xray_sdk

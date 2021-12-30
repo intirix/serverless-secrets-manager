@@ -28,7 +28,7 @@ fi
 	fi
 
 	$VENV_BIN/pip3 install wheel
-	$VENV_BIN/pip3 install -r requirements.txt
+	$VENV_BIN/pip3 install -r requirements.cli.txt
 	$VENV_BIN/pip3 install -r requirements.ui.txt
 	$VENV_BIN/pip3 install coverage
 
